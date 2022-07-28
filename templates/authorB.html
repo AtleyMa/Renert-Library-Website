@@ -1,0 +1,41 @@
+{% extends 'layout.html'%}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block title %}
+{{a}}
+{% endblock %}
+
+{%block content%}
+<a href="/browse" class="btn btn-dark m-3">Back to all books</a>
+<h1 class="m-3">{{a}}</h1>
+<br>
+<table class="table table-hover table-light table-bordered display" id="bookList">
+    <thead>
+        <tr>
+            <th scope="col">Renert Book ID</th>
+            <th scope="col">Title</th>
+        </tr>
+    </thead>
+    <tbody class="table-group-divider border-top-dark">
+        {% for a in authors %}
+                <tr>
+                    <td>
+                        <a href="/books/{{a.renert_id}}" class="text-decoration-none text-info"> {{a.renert_id}} </a>
+                    </td>
+                    <td>
+                        <a href="/books/{{a.renert_id}}" class="text-decoration-none text-info">{{a.title}}</a>
+                    </td>
+                </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{%endblock%}
+
+{% block script %}
+<script>
+    $(document).ready( function () {
+      $('#bookList').DataTable();
+  } );
+</script>
+{% endblock %}
