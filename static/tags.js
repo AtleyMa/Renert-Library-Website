@@ -58,7 +58,6 @@ $("td.trash-tag").click(del);
 
 $("a.undo-btn").click( function(e)
 {
-
     let curr = $(e.currentTarget);
     let deletedTag;
     let deletedBookTags;
@@ -133,6 +132,7 @@ function edit(e)
                 row[0].children[2].outerHTML = "<td><input type='text' class='form-control' value='" + row[0].children[2].innerHTML.trim() + "'></td>"
                 $("td.apply-tag").click( function(e)
                 {
+                
                 let curr = $(e.currentTarget);
                 let row = curr.parent();
                 let id = curr.data("apply-tag-id");
@@ -144,10 +144,21 @@ function edit(e)
                 data: {val1: tagNameVal, val2: tagDescVal},
                 success: function(x)
                     {
-                        $("[data-apply-tag-id=" + (id) + "]").replaceWith("<td class='edit-tag' data-edit-tag-id='{{a.tag_id}}'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor' class='bi bi-pencil-square text-primary' viewBox='0 0 16 16'><path d='M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z'/><path fill-rule='evenodd' d='M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z'/></svg></td>")
+                        $("[data-apply-tag-id=" + (id) + "]").replaceWith("<td class='edit-tag' data-edit-tag-id='" + id + "'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor' class='bi bi-pencil-square text-primary' viewBox='0 0 16 16'><path d='M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z'/><path fill-rule='evenodd' d='M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z'/></svg></td>")
                         row[0].children[1].outerHTML = "<td class=''><a href='/tag/" + id + "' class='text-decoration-none text-info'> " + tagNameVal + " </a></td>"
                         row[0].children[2].outerHTML = "<td class=''> " + tagDescVal + "</td>"
-                        row[0].children[4].click(edit)
+                        
+                        $("[data-edit-tag-id=" + (id) + "]").click(edit)
+                        $("[data-edit-tag-id=" + id + "]").mouseenter(function (e)
+                        {
+                            $(e.currentTarget).children().attr("width", 25)
+                            $(e.currentTarget).children().attr("height", 25)
+                        }).mouseleave( function(e)
+                        {
+                            $(e.currentTarget).children().attr("width", 20)
+                            $(e.currentTarget).children().attr("height", 20)
+                        })
+                        
                         $(".undone-apply-alert").fadeOut(1)
                         $(".applied-alert").fadeIn(1)
                         $(".applied-alert")[0].classList.remove("d-none");
@@ -171,6 +182,43 @@ function edit(e)
 }
 
 $("td.edit-tag").click(edit);
+
+$("a.undo-edit-btn").click(function(e)
+{
+    let editedTag;
+    $.ajax({
+        url: "/getEditedTag",
+        success: function(x)
+        {
+            editedTag = x
+            let curr = $("[data-edit-tag-id=" + (editedTag[2]) + "]")
+            let row = curr.parent()
+            $.ajax({
+                url: "/undoTagEdit",
+                success: function(x)
+                    {
+                        console.log(editedTag[0])
+                        row[0].children[1].outerHTML = "<td class=''><a href='/tag/" + editedTag[2] + "' class='text-decoration-none text-info'>" + editedTag[0] + "</a></td>"
+                        row[0].children[2].innerHTML = editedTag[1]
+                        console.log(row[0].children[1].outerHTML)
+                        
+                        $(".applied-alert").fadeOut(1)
+                        $(".undone-edit-alert").removeClass("d-none")
+                        $(".undone-edit-alert").fadeIn(1)
+                        setTimeout( ()=>{ $(".undone-edit-alert").fadeOut(1000); }, 5000)
+                    },
+                error: function(x)
+                    {
+                        console.log("Undoing tag edits was unsuccesful");
+                    }})
+        },
+        error: function(x)
+        {
+            console.log("Ajax failed to retrieve data from the server")
+        }
+    })
+}
+)
 
 $("td.edit-tag").mouseenter(function (e)
 {

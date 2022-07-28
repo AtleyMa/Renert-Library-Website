@@ -22,13 +22,13 @@ Tags
 
 <div class="row">
     <div class="alert alert-success alert-dismissible fade show position-fixed mt-3 top-0 d-none end-0 w-25 me-3 applied-alert" role="alert">
-        <strong>Success!</strong> Changes have been saved and applied. <a href="" onclick="return false;" class="undo-btn text-decoration-none text-dark">Undo</a>
+        <strong>Success!</strong> Changes have been saved and applied. <a href="" onclick="return false;" class="undo-edit-btn text-decoration-none text-dark">Undo</a>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 </div>
 
 <div class="row">
-    <div class="alert alert-success alert-dismissible fade show position-fixed mt-3 top-0 d-none end-0 w-25 me-3 undone-apply-alert" role="alert">
+    <div class="alert alert-success alert-dismissible fade show position-fixed mt-3 top-0 d-none end-0 w-25 me-3 undone-edit-alert" role="alert">
         <strong>Success!</strong> Changes have been reverted. 
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -41,18 +41,6 @@ Tags
                     {{ add_form.tag_name(class="form-control", placeholder="Tag Name") }}
                     {{ add_form.tag_def(class="form-control", placeholder="Tag Description") }}
                     {{ add_form.add(class="btn btn-dark")}}
-                </div>
-        </form>
-    </div>
-</div>
-<div class="row">
-    <div class="col-lg-8">
-        <form class="form form-horizontal text-light m-3" method="POST" role="form" autocomplete="off">
-                <div class="input-group mb-2 border border-dark rounded p-2">
-                    {{ edit_form.tag_id(class="form-control", placeholder="Tag ID", min="0") }}
-                    {{ edit_form.tag_name(class="form-control", placeholder="Tag Name") }}
-                    {{ edit_form.tag_def(class="form-control", placeholder="Tag Description") }}
-                    {{edit_form.edit(class="btn btn-dark")}}
                 </div>
         </form>
     </div>

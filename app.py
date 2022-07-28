@@ -23,25 +23,6 @@ def add_tags(tag_name, tag_def):
     db.session.execute(sql)
     db.session.commit()
 
-def change_tag(tag_id, tag_name, tag_def):
-    if (tag_name == "" and tag_def == ""):
-        sql = "select 1+1"
-    elif (tag_name != "" and tag_def != ""):
-        sql = "update library_tags set tag_name = '" + str(tag_name) + "' , description = '" + str(tag_def) + "' where tag_id = '" + str(tag_id) + "'"
-    elif (tag_name != "" and tag_def == ""):
-        sql = "update library_tags set tag_name = '" + str(tag_name) + "' where tag_id = '" + str(tag_id) + "'"
-    else:
-        sql = "update library_tags set description = '" + str(tag_def) + "' where tag_id = '" + str(tag_id) + "'"
-    db.session.execute(sql)
-    db.session.commit()
-
-def delete_tag(tag_id):
-    sql1 = "delete from library_tags where tag_id = '" + str(tag_id) + "'"
-    sql = "delete from library_books_tags where tag_id = '" + str(tag_id) + "'" 
-    db.session.execute(sql)
-    db.session.execute(sql1)
-    db.session.commit()
-
 def change_book(ren_id, book_name, author, notes):
     if (book_name == ""):
         book_name = db.session.execute("select title from library_books where renert_id = '" + str(ren_id) + "'")
@@ -80,20 +61,10 @@ class edit_book_form(FlaskForm):
     notes = TextAreaField('Notes: ', validators=[])
     edit = SubmitField("Edit", validators=[DataRequired()])
 
-class edit_tags_form(FlaskForm):
-    tag_id = IntegerField('Tag Id: ', validators=[DataRequired()])
-    tag_name = StringField('Tag Name: ', validators=[])
-    tag_def = TextAreaField('Tag Description: ', validators=[])
-    edit = SubmitField("Edit", validators=[DataRequired()])
-
 class add_tag_form(FlaskForm):
     tag_name = StringField('Tag Name: ', validators=[DataRequired()])
     tag_def = TextAreaField('Tag Description: ', validators=[DataRequired()])
     add = SubmitField("Add", validators=[DataRequired()])
-
-class del_tag_form(FlaskForm):
-    tag_id = IntegerField('Tag Id: ', validators=[DataRequired()])
-    delete = SubmitField("Delete", validators=[DataRequired()])
 
 class remove_btag_form(FlaskForm):
     tag_id = IntegerField('Tag Id: ', validators=[DataRequired()])
@@ -112,15 +83,9 @@ def main():
 @app.route("/tags", methods=["GET", "POST"])
 def tags():
     add_tag = add_tag_form()
-    edit_tag = edit_tags_form()
 
     if add_tag.validate_on_submit():
         add_tags(add_tag.tag_name.data, add_tag.tag_def.data)
-    else:
-        pprint("failed")
-
-    if edit_tag.validate_on_submit():
-        change_tag(edit_tag.tag_id.data, edit_tag.tag_name.data, edit_tag.tag_def.data)
     else:
         pprint("failed")
     
@@ -128,24 +93,15 @@ def tags():
     tags = [dict(x) for x in tags]
     count =db.session.execute("select count(*) from library_tags")
     count = [dict(x) for x in count]
-    return render_template("tags.html", tags=tags, add_form=add_tag, edit_form=edit_tag, count=count[0]["count(*)"])
+    return render_template("tags.html", tags=tags, add_form=add_tag, count=count[0]["count(*)"])
 
 @app.route("/tag/<int:id>", methods=["GET", "POST"])
 def tag(id):
-    edit_tag = edit_tags_form()
-    
-    edit_tag.tag_id.data = id
-
-    if edit_tag.validate_on_submit():
-        change_tag(edit_tag.tag_id.data, edit_tag.tag_name.data, edit_tag.tag_def.data)
-    else:
-        pprint("failed")
-    
     tag = db.session.execute("select tag_name, description, created_by, created_at, updated_at from library_tags where tag_id = '" + str(id) + "'")
     tag = [dict(x) for x in tag]
     books = db.session.execute("select library_books.title, library_books.author, library_books.renert_id from library_books_tags inner join library_books on library_books_tags.book_id = library_books.id where library_books_tags.tag_id = '" + str(id) + "'")
     books = [dict(x) for x in books]
-    return render_template("tag.html", tag=tag, edit_form=edit_tag, id=id)
+    return render_template("tag.html", tag=tag, id=id)
 
 @app.route("/book-tags", methods=["GET", "POST"])
 def bookTags():
@@ -232,7 +188,7 @@ def tagDelete(id):
     sql3 = [dict(x) for x in sql3]
     global deleted_tag
     deleted_tag += sql3
-    deleted_tag_all.append(delete_tag)
+    deleted_tag_all.append(deleted_tag)
 
     sql1 = "delete from library_tags where tag_id = '" + str(id) + "'"
 
@@ -278,7 +234,9 @@ def undoTagDelete():
 </html>"""
 
 deleted_book = []
+deleted_books_all = [[]]
 deleted_tags = []
+deleted_tags_to_books_all = [[]]
 @app.route("/bookDelete/<string:id>", methods=["GET", "POST"])
 def bookDelete(id):
     global deleted_book
@@ -343,7 +301,7 @@ def delTag(id):
     sql3 = db.session.execute(sql3)
     sql3 = [dict(x) for x in sql3]
     deleted_tag += sql3
-    deleted_tag_all.append(delete_tag)
+    deleted_tag_all.append(deleted_tag)
 
     sql1 = "delete from library_tags where tag_id = '" + str(id) + "'"
 
@@ -413,7 +371,7 @@ def delBook(id):
 
     db.session.commit()
     
-    return "yay"
+    return "book deleted"
 
 # Undo book deletion with ajax
 @app.route("/undoBookDel", methods=["GET", "POST"])
@@ -428,7 +386,7 @@ def undoBookDel():
     db.session.commit()
     deleted_book.clear()
     deleted_tags.clear()
-    return "yay"
+    return "undone book delete"
 
 # Send the most recently deleted tag with ajax
 @app.route("/getBook")
@@ -436,12 +394,86 @@ def getBook():
     global deleted_book
     return deleted_book[0]
 
-# Delete tag with ajax
+edited_tag = []
+edited_tags = [[]]
+
+# Apply edits to a tag with ajax
 @app.route("/applyTag/<int:id>", methods=["GET", "POST"])
 def applyTag(id):
+    global edited_tag
+    global edited_tags
+    edited_tag.clear()
     value1 = request.form["val1"]
     value2 = request.form["val2"]
+
+    sql1 = "select tag_name, description from library_tags where tag_id = '" + str(id) + "'"
+    sql1 = db.session.execute(sql1)
+    sql1 = [dict(x) for x in sql1]
+
+    edited_tag.append(sql1[0]["tag_name"])
+    edited_tag.append(sql1[0]["description"])
+    edited_tag.append(id)
+    edited_tags.append(edited_tag)
     sql = "update library_tags set tag_name = '" + str(value1) + "' , description = '" + str(value2) + "' where tag_id = '" + str(id) + "'"
     db.session.execute(sql)
     db.session.commit()
-    return "yay"
+    return "applied"
+
+# Undo tag edits with ajax
+@app.route("/undoTagEdit", methods=["GET", "POST"])
+def undoTagEdit():
+    global edited_tag
+    sql = "update library_tags set tag_name = '" + str(edited_tag[0]) + "' , description = '" + str(edited_tag[1]) + "' where tag_id = '" + str(edited_tag[2]) + "'"
+    db.session.execute(sql)
+    db.session.commit()
+    edited_tag.clear()
+    return "edited"
+
+# Send the data from the most recently edited tag with ajax
+@app.route("/getEditedTag")
+def getEditedTag():
+    global edited_tag
+    pprint(edited_tag)
+    return jsonify(edited_tag)
+
+edited_book = []
+edited_books = [[]]
+
+# Edit book with ajax
+@app.route("/applyBook/<string:id>", methods=["GET", "POST"])
+def applyBook(id):
+    global edited_book
+    global edited_books
+    edited_book.clear()
+    value1 = request.form["val1"]
+    value2 = request.form["val2"]
+
+    sql1 = "select title, author from library_books where renert_id = '" + str(id) + "'"
+    pprint(sql1)
+    sql1 = db.session.execute(sql1)
+    sql1 = [dict(x) for x in sql1]
+
+    edited_book.append(sql1[0]["title"])
+    edited_book.append(sql1[0]["author"])
+    edited_book.append(id)
+    edited_books.append(edited_book)
+    sql = "update library_books set title = '" + str(value1) + "' , author = '" + str(value2) + "' where renert_id = '" + str(id) + "'"
+    db.session.execute(sql)
+    db.session.commit()
+    return "applied"
+
+# Undo book edits with ajax
+@app.route("/undoBookEdit", methods=["GET", "POST"])
+def undoBookEdit():
+    global edited_book
+    sql = "update library_books set title = '" + str(edited_book[0]) + "' , author = '" + str(edited_book[1]) + "' where renert_id = '" + str(edited_book[2]) + "'"
+    db.session.execute(sql)
+    db.session.commit()
+    edited_book.clear()
+    return "edited"
+
+# Send the data from the most recently edited book with ajax
+@app.route("/getEditedBook")
+def getEditedBook():
+    global edited_book
+    return jsonify(edited_book)
