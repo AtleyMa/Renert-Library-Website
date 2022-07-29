@@ -9,34 +9,23 @@ from sqlalchemy.types import NVARCHAR
 from wtforms import IntegerField, StringField, SubmitField,TextAreaField, SelectMultipleField
 from wtforms.validators import DataRequired, Optional
 from flask_bootstrap import Bootstrap
+from flask_debugtoolbar import DebugToolbarExtension, panels
 
 app = Flask(__name__)
+
+app.debug = True
 
 app.config['WTF_CSRF_ENABLED'] = False
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://audrey:2@renert.docs:5433/school'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///renert-library.db'
+app.config['SECRET_KEY'] = 'atley'
+
+toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
 b = Bootstrap(app)
 
 def add_tags(tag_name, tag_def):
     sql = "insert into library_tags (tag_name, description, created_by) values ('" + str(tag_name) + "','" + str(tag_def) + "', 22)"
-    db.session.execute(sql)
-    db.session.commit()
-
-def change_book(ren_id, book_name, author, notes):
-    if (book_name == ""):
-        book_name = db.session.execute("select title from library_books where renert_id = '" + str(ren_id) + "'")
-        book_name = [dict(x) for x in book_name]
-        book_name = book_name[0]["title"]
-    if (author == ""):
-        author = db.session.execute("select author from library_books where renert_id = '" + str(ren_id) + "'")
-        author = [dict(x) for x in author]
-        author = author[0]["author"]
-    if (notes == ""):
-        notes = db.session.execute("select notes from library_books where renert_id = '" + str(ren_id) + "'")
-        notes = [dict(x) for x in notes]
-        notes = notes[0]["notes"]
-    sql = "update library_books set title = '" + str(book_name) + "' , author = '" + str(author) + "', notes = '" + str(notes) + "' where renert_id = '" + str(ren_id) + "'"
     db.session.execute(sql)
     db.session.commit()
 
@@ -53,13 +42,6 @@ def apply_tags(book_id, tag_id, tag_name):
     sql = "insert into library_books_tags (book_id, tag_id) values ('" + str(book_id) + "','" + str(tag_id) + "')"
     db.session.execute(sql)
     db.session.commit()
-
-class edit_book_form(FlaskForm):
-    ren_id = IntegerField('Renert Book Id: ', validators=[DataRequired()])
-    book_name = StringField('Book Name: ', validators=[])
-    author = StringField('Author: ', validators=[])
-    notes = TextAreaField('Notes: ', validators=[])
-    edit = SubmitField("Edit", validators=[DataRequired()])
 
 class add_tag_form(FlaskForm):
     tag_name = StringField('Tag Name: ', validators=[DataRequired()])
@@ -111,19 +93,13 @@ def bookTags():
 
 @app.route("/book/<string:id>", methods=["GET", "POST"])
 def book(id):
-    edit_book = edit_book_form()
     apply_tag = apply_btag_form()
     remove_tag = remove_btag_form()
-    
-    edit_book.ren_id.data = id
+
     apply_tag.book_id.data = id
     if (apply_tag.is_submitted()):
         if apply_tag.tag_id.data == None:
             apply_tag.tag_id.data = -1
-
-    if edit_book.validate_on_submit():
-        print("EDIT-BOOK mode")
-        change_book(edit_book.ren_id.data, edit_book.book_name.data, edit_book.author.data, edit_book.notes.data)
   
     if apply_tag.validate_on_submit():
         print("Apply-Form is Valid")
@@ -138,7 +114,7 @@ def book(id):
     book = [dict(x) for x in book]
     tags = db.session.execute("select library_tags.tag_id, library_tags.tag_name, library_tags.description from library_tags inner join library_books_tags on library_tags.tag_id = library_books_tags.tag_id inner join library_books on library_books_tags.book_id = library_books.id where library_books.renert_id = '" + str(id) + "'")
     tags = [dict(x) for x in tags]
-    return render_template("book.html", book=book, tags=tags, edit_form=edit_book, id=id, apply_tag=apply_tag, remove_tag=remove_tag)
+    return render_template("book.html", book=book, tags=tags, id=id, apply_tag=apply_tag, remove_tag=remove_tag)
 
 @app.route("/author/<string:a>", methods=["GET", "POST"])
 def author(a):
@@ -427,14 +403,55 @@ def undoTagEdit():
     db.session.execute(sql)
     db.session.commit()
     edited_tag.clear()
-    return "edited"
+    return "undone"
 
 # Send the data from the most recently edited tag with ajax
 @app.route("/getEditedTag")
 def getEditedTag():
     global edited_tag
-    pprint(edited_tag)
     return jsonify(edited_tag)
+
+# Apply edits to tag name with ajax
+@app.route("/applyTagName/<int:id>", methods=["GET", "POST"])
+def applyTagName(id):
+    global edited_tag
+    global edited_tags
+    edited_tag.clear()
+    value1 = request.form["val1"]
+
+    sql1 = "select tag_name, description from library_tags where tag_id = '" + str(id) + "'"
+    sql1 = db.session.execute(sql1)
+    sql1 = [dict(x) for x in sql1]
+
+    edited_tag.append(sql1[0]["tag_name"])
+    edited_tag.append(sql1[0]["description"])
+    edited_tag.append(id)
+    edited_tags.append(edited_tag)
+    sql = "update library_tags set tag_name = '" + str(value1) + "' where tag_id = '" + str(id) + "'"
+    db.session.execute(sql)
+    db.session.commit()
+    return "applied"
+
+# Apply edits to tag name with ajax
+@app.route("/applyTagDesc/<int:id>", methods=["GET", "POST"])
+def applyTagDesc(id):
+    global edited_tag
+    global edited_tags
+    edited_tag.clear()
+    value1 = request.form["val1"]
+
+    sql1 = "select tag_name, description from library_tags where tag_id = '" + str(id) + "'"
+    sql1 = db.session.execute(sql1)
+    sql1 = [dict(x) for x in sql1]
+
+    edited_tag.append(sql1[0]["tag_name"])
+    edited_tag.append(sql1[0]["description"])
+    edited_tag.append(id)
+    edited_tags.append(edited_tag)
+    sql = "update library_tags set description = '" + str(value1) + "' where tag_id = '" + str(id) + "'"
+    db.session.execute(sql)
+    db.session.commit()
+    return "applied"
 
 edited_book = []
 edited_books = [[]]
