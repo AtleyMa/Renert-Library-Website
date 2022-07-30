@@ -138,3 +138,104 @@ $("a.undo-edit-btn").click(function(e)
     })
 }
 )
+
+function del(e)
+{
+    let curr = $(e.currentTarget);
+    let row = curr.parent()
+    let id = curr.data("ren-id");
+    let tagId = $(".edit-tag").data("edit-tag-id")
+    $.ajax({
+        url: "/delBookFromTag/" + String(id) + "/" + String(tagId),
+        success: function(x)
+            {
+                let len = row[0].children.length
+                for (let i = 0; i < len; i++)
+                {
+                    row[0].children[i].classList.add("bg-danger");
+                }
+                $(row[0]).fadeOut(5000);
+
+                $(".undone-alert").fadeOut(1)
+                $(".deleted-alert").fadeIn(1)
+                $(".deleted-alert")[0].classList.remove("d-none");
+                setTimeout( ()=>{
+                $(".deleted-alert").fadeOut( ()=>{
+                $(".deleted-alert")[0].classList.add("d-none")
+                });
+                }, 3000)
+            },
+        error: function(x)
+            {
+                console.log("Deleting the tag from the book was unsuccesful");
+            }})
+}
+
+$("td.trash-book").click(del);
+
+$("a.undo-btn").click( function(e)
+{
+    let deletedBook;
+    $.ajax({
+        url: "/getBookWithTag",
+        success: function(x)
+        {
+            deletedBook = x
+            $.ajax({
+                url: "/undoBookDelFromTag",
+                success: function(x)
+                    {
+                        let row = $("<tr>");
+        
+                        let renIdTD = $("<td>").appendTo(row)
+                        renIdTD.html("<a href='/book/" + String(deletedBook['renert_id']) + "' class='text-decoration-none text-info'> " + String(deletedBook['renert_id']) + " </a>")
+                        let titleTD = $("<td>").appendTo(row)
+                        titleTD.html("<a href='/book/" + String(deletedBook['renert_id']) + "' class='text-decoration-none text-info'>" + String(deletedBook['title']) + "</a>")
+                        let authorTD = $("<td>").appendTo(row)
+                        authorTD.html("<a href='/author/" + String(deletedBook['author']) + "' class='text-decoration-none text-info'> " + String(deletedBook['author']) + " </a>")
+                        let trashTD = $("<td>").appendTo(row)
+                        trashTD.addClass("trash-book")
+                        trashTD.attr('data-ren-id', deletedBook['renert_id'])
+                        trashTD.html("<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor' class='bi bi-trash3 text-danger' viewBox='0 0 16 16'><path d='M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z'/></svg>")
+                        trashTD.click(del);
+                        trashTD.mouseenter(function (e)
+                        {
+                            $(e.currentTarget).children().attr("width", 25)
+                            $(e.currentTarget).children().attr("height", 25)
+                        }).mouseleave( function(e)
+                        {
+                            $(e.currentTarget).children().attr("width", 20)
+                            $(e.currentTarget).children().attr("height", 20)
+                        })
+                        
+                        $('#bookList').DataTable().destroy();
+                        $("#bookList tbody").prepend(row[0])
+                        $('#bookList').DataTable().draw();
+                        
+                        $(".deleted-alert").fadeOut(1)
+                        $(".undone-alert").removeClass("d-none")
+                        $(".undone-alert").fadeIn(1)
+                        setTimeout( ()=>{ $(".undone-alert").fadeOut(1000); }, 5000)
+                    },
+                error: function(x)
+                    {
+                        console.log("Undoing book deletion from tag was unsuccesful");
+                    }})
+        },
+        error: function(x)
+        {
+            console.log("Ajax failed to retrieve data from the server")
+        }
+    })
+}
+);
+
+$("td.trash-book").mouseenter(function (e)
+{
+    $(e.currentTarget).children().attr("width", 25)
+    $(e.currentTarget).children().attr("height", 25)
+}).mouseleave( function(e)
+{
+    $(e.currentTarget).children().attr("width", 20)
+    $(e.currentTarget).children().attr("height", 20)
+})

@@ -19,7 +19,7 @@ app.config['WTF_CSRF_ENABLED'] = False
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://audrey:2@renert.docs:5433/school'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///renert-library.db'
 app.config['SECRET_KEY'] = 'atley'
-
+app.config['DEBUG_TB_PROFILER_ENABLED'] = True
 toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
 b = Bootstrap(app)
@@ -83,7 +83,7 @@ def tag(id):
     tag = [dict(x) for x in tag]
     books = db.session.execute("select library_books.title, library_books.author, library_books.renert_id from library_books_tags inner join library_books on library_books_tags.book_id = library_books.id where library_books_tags.tag_id = '" + str(id) + "'")
     books = [dict(x) for x in books]
-    return render_template("tag.html", tag=tag, id=id)
+    return render_template("tag.html", tag=tag, id=id, books=books)
 
 @app.route("/book-tags", methods=["GET", "POST"])
 def bookTags():
@@ -325,8 +325,6 @@ def delBook(id):
     deleted_book.clear()
     deleted_tags.clear()
 
-    deleted_book.clear()
-    deleted_tags.clear()
     sql3 = "select * from library_books where id = '" + str(id) + "'"
     sql3 = db.session.execute(sql3)
     sql3 = [dict(x) for x in sql3]
@@ -494,3 +492,82 @@ def undoBookEdit():
 def getEditedBook():
     global edited_book
     return jsonify(edited_book)
+
+deleted_book_from_tag = []
+deleted_book_from_tag_id = 0;
+
+# Delete book from Tag with ajax
+@app.route("/delBookFromTag/<string:id>/<int:tag>", methods=["GET", "POST"])
+def delBookFromTag(id, tag):
+    global deleted_book_from_tag
+    global deleted_book_from_tag_id
+    deleted_book_from_tag.clear()
+    deleted_book_from_tag_id = tag
+
+    sql3 = "select * from library_books where renert_id = '" + str(id) + "'"
+    sql3 = db.session.execute(sql3)
+    sql3 = [dict(x) for x in sql3]
+    deleted_book_from_tag += sql3
+
+    sql1 = "delete from library_books_tags where book_id = '" + str(sql3[0]['id']) + "'"
+
+    db.session.execute(sql1)
+
+    db.session.commit()
+    
+    return "book deleted from tag"
+
+# Undo book deletion from tag with ajax
+@app.route("/undoBookDelFromTag", methods=["GET", "POST"])
+def undoBookDelFromTag():
+    global deleted_book_from_tag
+    sql = "insert into library_books_tags (book_id, tag_id) values ('" + str(deleted_book_from_tag[0]['id']) + "','" + str(deleted_book_from_tag_id) + "')"
+    db.session.execute(sql)
+    db.session.commit()
+    deleted_book_from_tag.clear()
+    return "undone book delete from tag"
+
+# Send the most recently deleted tag with ajax
+@app.route("/getBookWithTag")
+def getBookWithTag():
+    global deleted_book_from_tag
+    return deleted_book_from_tag[0]
+
+deleted_tag_from_book = []
+deleted_tag_from_book_id = 0
+
+# Delete tag from book with ajax
+@app.route("/delTagFromBook/<int:tag>/<string:ren>", methods=["GET", "POST"])
+def delTagFromBook(tag, ren):
+    global deleted_tag_from_book
+    global deleted_tag_from_book_id
+    deleted_tag_from_book.clear()
+    deleted_tag_from_book_id = ren
+
+    sql3 = "select * from library_tags where tag_id = '" + str(tag) + "'"
+    sql3 = db.session.execute(sql3)
+    sql3 = [dict(x) for x in sql3]
+    deleted_tag_from_book += sql3
+
+    sql = "delete from library_books_tags where tag_id = '" + str(tag) + "'" 
+
+    db.session.execute(sql)
+
+    db.session.commit()
+    return "yay"
+
+# Undo tag deletion from book with ajax
+@app.route("/undoTagDelFromBook", methods=["GET", "POST"])
+def undoTagDelFromBook():
+    global deleted_tag_from_book
+    sql1 = "insert into library_books_tags (book_id, tag_id) values ('" + str(deleted_tag_from_book_id) + "','" + str(deleted_tag_from_book[0]['tag_id']) + "')"
+    db.session.execute(sql1)
+    db.session.commit()
+    deleted_tag_from_book.clear()
+    return "yay"
+
+# Send the most recently deleted tag with ajax
+@app.route("/getTagsWithBook")
+def getTagsWithBook():
+    global deleted_tag_from_book
+    return deleted_tag_from_book[0]
