@@ -29,11 +29,6 @@ def add_tags(tag_name, tag_def):
     db.session.execute(sql)
     db.session.commit()
 
-def remove_btag(tag_id):
-    sql = "delete from library_books_tags where tag_id = '" + str(tag_id) +"'"
-    db.session.execute(sql)
-    db.session.commit()
-
 def apply_tags(book_id, tag_id, tag_name):
     if (tag_id == -1 and tag_name != ""):
         tag_id = db.session.execute("select tag_id from library_tags where tag_name = '" + str(tag_name) + "'")
@@ -47,10 +42,6 @@ class add_tag_form(FlaskForm):
     tag_name = StringField('Tag Name: ', validators=[DataRequired()])
     tag_def = TextAreaField('Tag Description: ', validators=[DataRequired()])
     add = SubmitField("Add", validators=[DataRequired()])
-
-class remove_btag_form(FlaskForm):
-    tag_id = IntegerField('Tag Id: ', validators=[DataRequired()])
-    remove = SubmitField("Delete", validators=[DataRequired()])
 
 class apply_btag_form(FlaskForm):
     book_id = IntegerField('Book Id: ', validators=[])
@@ -94,7 +85,6 @@ def bookTags():
 @app.route("/book/<string:id>", methods=["GET", "POST"])
 def book(id):
     apply_tag = apply_btag_form()
-    remove_tag = remove_btag_form()
 
     apply_tag.book_id.data = id
     if (apply_tag.is_submitted()):
@@ -106,15 +96,12 @@ def book(id):
         apply_tags(apply_tag.book_id.data, apply_tag.tag_id.data, apply_tag.tag_name.data)
     else:
         print("Apply Form - Not submitted or not valid")
-
-    if remove_tag.validate_on_submit():
-        remove_btag(remove_tag.tag_id.data)
     
     book = db.session.execute("select id, title, author, created_at, updated_at from library_books where renert_id = '" + str(id) + "'")
     book = [dict(x) for x in book]
     tags = db.session.execute("select library_tags.tag_id, library_tags.tag_name, library_tags.description from library_tags inner join library_books_tags on library_tags.tag_id = library_books_tags.tag_id inner join library_books on library_books_tags.book_id = library_books.id where library_books.renert_id = '" + str(id) + "'")
     tags = [dict(x) for x in tags]
-    return render_template("book.html", book=book, tags=tags, id=id, apply_tag=apply_tag, remove_tag=remove_tag)
+    return render_template("book.html", book=book, tags=tags, id=id, apply_tag=apply_tag)
 
 @app.route("/author/<string:a>", methods=["GET", "POST"])
 def author(a):
