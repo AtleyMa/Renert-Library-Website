@@ -1,3 +1,12 @@
+# Renert Library Website
+'''
+TODO:   - Select2 with ajax on book, tag, and browse books
+        - Optimize speed on bookstags and browse books
+        - Add functionality to check whether student/teacher or librarian (Show website accordingly)
+        - Books with no tags
+        - Tags with no books
+'''
+
 from __future__ import division
 from operator import floordiv
 from flask import Flask, jsonify, redirect, render_template, request, session
@@ -60,7 +69,7 @@ def tags():
     if add_tag.validate_on_submit():
         add_tags(add_tag.tag_name.data, add_tag.tag_def.data)
     else:
-        pprint("failed")
+        pprint("Adding Tag failed")
     
     tags = db.session.execute("select * from library_tags")
     tags = [dict(x) for x in tags]
