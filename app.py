@@ -3,8 +3,8 @@
 TODO:   - Select2 with ajax on book, tag, and browse books
         - Optimize speed on bookstags and browse books
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
-        - Books with no tags
-        - Tags with no books
+        - Look nice on mobile (dynamic)
+        - Tooltips
 '''
 
 from __future__ import division
@@ -75,7 +75,14 @@ def tags():
     tags = [dict(x) for x in tags]
     count =db.session.execute("select count(*) from library_tags")
     count = [dict(x) for x in count]
-    return render_template("tags.html", tags=tags, add_form=add_tag, count=count[0]["count(*)"])
+    count = count[0]["count(*)"]
+    tags_without_books = []
+    for i in tags:
+        tag = db.session.execute("select * from library_books_tags where tag_id = '" + str(i['tag_id']) + "'")
+        tag = [dict(x) for x in tag]
+        if tag == []:
+            tags_without_books.append(i["tag_id"])
+    return render_template("tags.html", tags=tags, add_form=add_tag, count=count, twb = tags_without_books)
 
 @app.route("/tag/<int:id>", methods=["GET", "POST"])
 def tag(id):
@@ -89,7 +96,16 @@ def tag(id):
 def bookTags():
     bookTags = db.session.execute("select * from library_books")
     bookTags = [dict(x) for x in bookTags]
-    return render_template("booksTag.html", bookTags=bookTags)
+    count =db.session.execute("select count(*) from library_books")
+    count = [dict(x) for x in count]
+    count = count[0]["count(*)"]
+    books_without_tags = []
+    for i in bookTags:
+        book = db.session.execute("select * from library_books_tags where book_id = '" + str(i['id']) + "'")
+        book = [dict(x) for x in book]
+        if book == []:
+            books_without_tags.append(i["id"])
+    return render_template("booksTag.html", bookTags=bookTags, bwt=books_without_tags)
 
 @app.route("/book/<string:id>", methods=["GET", "POST"])
 def book(id):
