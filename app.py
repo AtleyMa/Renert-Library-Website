@@ -1,10 +1,12 @@
 # Renert Library Website
 '''
-TODO:   - Select2 with ajax on book, tag, and browse books
+TODO:   - Select2 with ajax on browse books
+        - Fix warning icon for untagged/unused books/tags after deleting all tags/books
         - Optimize speed on bookstags and browse books
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
         - Look nice on mobile (dynamic)
         - Tooltips
+        - Sort by unused books/tags and others
 '''
 
 from __future__ import division
@@ -38,25 +40,10 @@ def add_tags(tag_name, tag_def):
     db.session.execute(sql)
     db.session.commit()
 
-def apply_tags(book_id, tag_id, tag_name):
-    if (tag_id == -1 and tag_name != ""):
-        tag_id = db.session.execute("select tag_id from library_tags where tag_name = '" + str(tag_name) + "'")
-        tag_id = [dict(x) for x in tag_id]
-        tag_id = tag_id[0]["tag_id"]
-    sql = "insert into library_books_tags (book_id, tag_id) values ('" + str(book_id) + "','" + str(tag_id) + "')"
-    db.session.execute(sql)
-    db.session.commit()
-
 class add_tag_form(FlaskForm):
     tag_name = StringField('Tag Name: ', validators=[DataRequired()])
     tag_def = TextAreaField('Tag Description: ', validators=[DataRequired()])
     add = SubmitField("Add", validators=[DataRequired()])
-
-class apply_btag_form(FlaskForm):
-    book_id = IntegerField('Book Id: ', validators=[])
-    tag_id = IntegerField('Tag Id: ', validators=[Optional()])
-    tag_name = StringField('Tag Name: ', validators=[])
-    apply_btag = SubmitField("Apply", validators=[DataRequired()])
 
 @app.route("/", methods=["GET", "POST"])
 def main():
@@ -90,7 +77,9 @@ def tag(id):
     tag = [dict(x) for x in tag]
     books = db.session.execute("select library_books.title, library_books.author, library_books.renert_id from library_books_tags inner join library_books on library_books_tags.book_id = library_books.id where library_books_tags.tag_id = '" + str(id) + "'")
     books = [dict(x) for x in books]
-    return render_template("tag.html", tag=tag, id=id, books=books)
+    all_books = db.session.execute("select * from library_books")
+    all_books = [dict(x) for x in all_books]
+    return render_template("tag.html", tag=tag, id=id, books=books, all_books = all_books)
 
 @app.route("/book-tags", methods=["GET", "POST"])
 def bookTags():
@@ -109,24 +98,13 @@ def bookTags():
 
 @app.route("/book/<string:id>", methods=["GET", "POST"])
 def book(id):
-    apply_tag = apply_btag_form()
-
-    apply_tag.book_id.data = id
-    if (apply_tag.is_submitted()):
-        if apply_tag.tag_id.data == None:
-            apply_tag.tag_id.data = -1
-  
-    if apply_tag.validate_on_submit():
-        print("Apply-Form is Valid")
-        apply_tags(apply_tag.book_id.data, apply_tag.tag_id.data, apply_tag.tag_name.data)
-    else:
-        print("Apply Form - Not submitted or not valid")
-    
     book = db.session.execute("select id, title, author, created_at, updated_at from library_books where renert_id = '" + str(id) + "'")
     book = [dict(x) for x in book]
     tags = db.session.execute("select library_tags.tag_id, library_tags.tag_name, library_tags.description from library_tags inner join library_books_tags on library_tags.tag_id = library_books_tags.tag_id inner join library_books on library_books_tags.book_id = library_books.id where library_books.renert_id = '" + str(id) + "'")
     tags = [dict(x) for x in tags]
-    return render_template("book.html", book=book, tags=tags, id=id, apply_tag=apply_tag)
+    all_tags = db.session.execute("select * from library_tags")
+    all_tags = [dict(x) for x in all_tags]
+    return render_template("book.html", book=book, tags=tags, id=id, all_tags = all_tags)
 
 @app.route("/author/<string:a>", methods=["GET", "POST"])
 def author(a):
@@ -572,8 +550,7 @@ def delTagFromBook(tag, ren):
 @app.route("/undoTagDelFromBook", methods=["GET", "POST"])
 def undoTagDelFromBook():
     global deleted_tag_from_book
-    sql1 = "insert into library_books_tags (book_id, tag_id) values ('" + str(deleted_tag_from_book_id) + "','" + str(deleted_tag_from_book[0]['tag_id']) + "')"
-    db.session.execute(sql1)
+    db.session.execute("insert into library_books_tags (book_id, tag_id) values ('" + str(deleted_tag_from_book_id) + "','" + str(deleted_tag_from_book[0]['tag_id']) + "')")
     db.session.commit()
     deleted_tag_from_book.clear()
     return "yay"
@@ -583,3 +560,39 @@ def undoTagDelFromBook():
 def getTagsWithBook():
     global deleted_tag_from_book
     return deleted_tag_from_book[0]
+
+# Apply tags to a book using select2 and ajax
+@app.route("/applyTags", methods=["GET", "POST"])
+def applyTagsS2():
+    id = request.form['id']
+    book_id = db.session.execute("select id from library_books where renert_id = '" + id + "'")
+    book_id = [dict(x) for x in book_id]
+    book_id = book_id[0]['id']
+    db.session.execute("delete from library_books_tags where book_id ='" + str(book_id) + "'")
+    db.session.commit()
+    values = request.form.getlist("values[]")
+    tag_names_descs = []
+    for i in values:
+        db.session.execute("insert into library_books_tags (book_id, tag_id) values ('" + id + "','" + i + "')")
+        db.session.commit()
+        a = db.session.execute("select tag_name, description from library_tags where tag_id = '" + i + "'")
+        a = [dict(x) for x in a]
+        tag_names_descs.append(a[0])
+    return jsonify(tag_names_descs)
+
+# Apply books to a tag using select2 and ajax
+@app.route("/applyBooks", methods=["GET", "POST"])
+def applyBooksS2():
+    id = request.form['id']
+    db.session.execute("delete from library_books_tags where tag_id ='" + str(id) + "'")
+    db.session.commit()
+    values = request.form.getlist("values[]")
+    pprint(values)
+    book_t_a = []
+    for i in values:
+        db.session.execute("insert into library_books_tags (book_id, tag_id) values ('" + i + "','" + id + "')")
+        db.session.commit()
+        a = db.session.execute("select title, author from library_books where renert_id = '" + i + "'")
+        a = [dict(x) for x in a]
+        book_t_a.append(a[0])
+    return jsonify(book_t_a)

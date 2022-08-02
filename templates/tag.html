@@ -33,6 +33,13 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="alert alert-success alert-dismissible fade show position-fixed mt-3 top-0 d-none end-0 w-25 me-3 applied-book-alert" role="alert">
+        <strong>Success!</strong> Tag added to book(s). 
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
 <a href="/tags" class="btn btn-dark m-3">Back to all Tags</a>
 
 <div class="row">
@@ -116,6 +123,17 @@
 
 <h2 class="m-3">Books with this tag:</h2>
 
+<div class="row">
+        <form class="form form-horizontal text-light m-3" method="POST" role="form" autocomplete="off">
+            <select class="books-apply m-3 col-10" multiple="multiple">
+                {% for x in all_books %}
+                    <option value="{{x.renert_id}}">{{x.title}}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" onclick="return false;" class="btn btn-dark apply">Apply</button>
+        </form>
+</div>
+
 <table class="table table-hover table-light table-bordered display" id="bookList">
     <thead>
         <tr>
@@ -129,7 +147,7 @@
         {% for a in books %}
                 <tr>
                     <td>
-                        <a href="/book/{{a.renert_id}}" class="text-decoration-none text-info">{{a['renert_id']}}</a>
+                        <a href="/book/{{a.renert_id}}" class="text-decoration-none text-info id">{{a['renert_id']}}</a>
                     </td>
                     <td>
                         <a href="/book/{{a.renert_id}}" class="text-decoration-none text-info"> {{a['title']}} </a>

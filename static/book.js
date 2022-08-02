@@ -2,6 +2,77 @@ $(document).ready( function () {
     $('#tagList').DataTable();
 } );
 
+let tags = []
+
+$(".id").each(function() {
+    tags.push($(this).html())
+})
+
+$(document).ready(function() {
+    $('.tags-apply').select2();
+    $(".tags-apply").val(tags).trigger('change')
+});
+
+$("button.apply").click(function(e)
+{
+    let d = $('.tags-apply').val();
+    let id = $('.edit-book').data("edit-book-id");
+    $.ajax({
+        type: "POST",
+        url: "/applyTags",
+        data: {values: d, id: id},
+        success: function(x)
+        {
+            tagNamesDescs = x
+            $('#tagList').DataTable().destroy();
+            $('#tagList tbody').remove()
+            $('#tagList').DataTable().draw();
+            for (let i = 0; i < d.length; i++)
+            {
+                let row = $("<tr>");
+            
+                let idTD = $("<td>").appendTo(row)
+                idTD.html("<a href='/tag/" + d[i] + "' class='text-decoration-none text-info'>" + d[i] + "</a>")
+                let nameTD = $("<td>").appendTo(row)
+                nameTD.html("<a href='/tag/" + d[i] + "' class='text-decoration-none text-info'>" + tagNamesDescs[i]['tag_name'] + "</a>")
+                let descTD = $("<td>").appendTo(row)
+                descTD.html(String(tagNamesDescs[i]['description']))
+                let trashTD = $("<td>").appendTo(row)
+                trashTD.addClass("trash-tag")
+                trashTD.attr('data-tag-id', d[i])
+                trashTD.html("<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor' class='bi bi-trash3 text-danger' viewBox='0 0 16 16'><path d='M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5ZM11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H2.506a.58.58 0 0 0-.01 0H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1h-.995a.59.59 0 0 0-.01 0H11Zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5h9.916Zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47ZM8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5Z'/></svg>")
+                trashTD.click(del);
+                trashTD.mouseenter(function (e)
+                {
+                    $(e.currentTarget).children().attr("width", 25)
+                    $(e.currentTarget).children().attr("height", 25)
+                }).mouseleave( function(e)
+                {
+                    $(e.currentTarget).children().attr("width", 20)
+                    $(e.currentTarget).children().attr("height", 20)
+                })
+                
+                $('#tagList').DataTable().destroy();
+                $("#tagList tbody").prepend(row[0])
+                $('#tagList').DataTable().draw();
+            }
+            $(".applied-tag-alert").fadeOut(1)
+                $(".applied-tag-alert").fadeIn(1)
+                $(".applied-tag-alert")[0].classList.remove("d-none");
+                setTimeout( ()=>{
+                $(".applied-tag-alert").fadeOut( ()=>{
+                $(".applied-tag-alert")[0].classList.add("d-none")
+                });
+                }, 5000)
+        },
+        error: function(x)
+        {
+            console.log("Ajax failed to apply tags to the book")
+        }
+    })
+}
+)
+
 function edit(e)
 {
     let curr = $(e.currentTarget);
