@@ -6,19 +6,18 @@ Browse Books
 {% endblock %}
 
 {%block content%}
-<h2 class=m-3>Browse Books</h2>
+<h1 class=m-3>Browse Books</h1>
 <br>
 <h5 class="m-3">Search by Tag:</h5>
 <div class="row">
-    <div class="col-lg-4"></div>
-        <form class="form form-horizontal text-light m-3" method="POST" role="form" autocomplete="off">
-            <select class="tags_search w-25 m-3" name="tags_search" multiple="multiple">
-                {% for x in tags %}
-                    <option value="{{x.tag_id}}">{{x.tag_name}}</option>
-                {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-primary">Show</button>
-        </form>
+    <form class="form form-horizontal text-light m-3 col-10" method="POST" role="form" autocomplete="off">
+        <select class="tags-search m-3" name="tags-search" multiple="multiple">
+            {% for x in tags %}
+                <option value="{{x.tag_id}}">{{x.tag_name}}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" onclick="return false;" class="btn btn-dark show">Show</button>
+    </form>
 </div>
 <br>
 <br>
@@ -40,8 +39,8 @@ Browse Books
     <tbody class="table-group-divider border-top-dark">
         {% for a in books %}
                 <tr>
-                    <td>
-                        <a href="/books/{{a.renert_id}}" class="text-decoration-none text-info"> {{a.renert_id}} </a>
+                    <td class="id">
+                        <a href="/books/{{a.renert_id}}" class="text-decoration-none text-info id"> {{a.renert_id}} </a>
                     </td>
                     <td>
                         <a href="/books/{{a.renert_id}}" class="text-decoration-none text-info">{{a.title}}</a>
@@ -57,13 +56,5 @@ Browse Books
 {%endblock%}
 
 {% block script %}
-<script>
-$(document).ready( function () {
-      $('#bookList').DataTable();
-  } );
-$(document).ready(function() {
-    $('.tags_search').select2();
-});
-const data = $('.tags_search').select2('data');
-</script>
+<script src="../static/browse.js"></script>
 {% endblock %}

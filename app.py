@@ -1,6 +1,6 @@
 # Renert Library Website
 '''
-TODO:   - Select2 with ajax on browse books
+TODO:
         - Optimize speed on bookstags and browse books
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
         - Look nice on mobile (dynamic)
@@ -595,3 +595,17 @@ def applyBooksS2():
         a = [dict(x) for x in a]
         book_t_a.append(a[0])
     return jsonify(book_t_a)
+
+# Search by tag while browsing
+@app.route("/searchByTag", methods=["GET", "POST"])
+def searchByTag():
+    values = request.form.getlist("values[]")
+    valuesSTR = str(values).replace('[', '')
+    valuesSTR = valuesSTR.replace(']', '')
+    filtered = db.session.execute("select renert_id from library_books inner join library_books_tags on library_books.id = library_books_tags.book_id inner join library_tags on library_tags.tag_id = library_books_tags.tag_id where library_tags.tag_id IN (" + valuesSTR + ")")
+    filtered = [dict(x) for x in filtered]
+    books = db.session.execute("select * from library_books")
+    books = [dict(x) for x in books]
+    if (values == []):
+        return jsonify(books)
+    return jsonify(filtered)
