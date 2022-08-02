@@ -5,7 +5,7 @@ $(document).ready( function () {
 let books = []
 
 $(".id").each(function() {
-    books.push($(this).html())
+    books.push($(this).html().trim())
 })
 
 $(document).ready(function() {
@@ -17,6 +17,14 @@ $("button.apply").click(function(e)
 {
     let d = $('.books-apply').val();
     let id = $('.edit-tag').data("edit-tag-id");
+    if (d.length == 0)
+    {
+        $('.bi-exclamation-triangle').removeClass('d-none')
+    }
+    if (d.length != 0)
+    {
+        $('.bi-exclamation-triangle').addClass('d-none')
+    }
     $.ajax({
         type: "POST",
         url: "/applyBooks",
@@ -32,7 +40,7 @@ $("button.apply").click(function(e)
                 let row = $("<tr>");
         
                 let renIdTD = $("<td>").appendTo(row)
-                renIdTD.html("<a href='/book/" + d[i] + "' class='text-decoration-none text-info'> " + d[i] + " </a>")
+                renIdTD.html("<a href='/book/" + d[i] + "' class='text-decoration-none text-info id'> " + d[i] + " </a>")
                 let titleTD = $("<td>").appendTo(row)
                 titleTD.html("<a href='/book/" + d[i] + "' class='text-decoration-none text-info'>" + bookTA[i]['title'] + "</a>")
                 let authorTD = $("<td>").appendTo(row)
@@ -226,6 +234,22 @@ function del(e)
                     row[0].children[i].classList.add("bg-danger");
                 }
                 $(row[0]).fadeOut(5000);
+                setTimeout(function() {
+                    $('#bookList').DataTable().destroy();
+                    $(row[0]).remove()
+                    $('#bookList').DataTable().draw();
+                    if (! $("#bookList").DataTable().data().any())
+                    {
+                        $('.bi-exclamation-triangle').removeClass('d-none')
+                    }
+                    books = []
+                    $(".id").each(function() {
+                    books.push($(this).html().trim())
+                    })
+                    console.log(books)
+                    $(".books-apply").val(books).trigger('change')
+                    console.log($(".books-apply").val())
+                }, 5000)
 
                 $(".undone-alert").fadeOut(1)
                 $(".deleted-alert").fadeIn(1)
@@ -259,7 +283,7 @@ $("a.undo-btn").click( function(e)
                         let row = $("<tr>");
         
                         let renIdTD = $("<td>").appendTo(row)
-                        renIdTD.html("<a href='/book/" + String(deletedBook['renert_id']) + "' class='text-decoration-none text-info'> " + String(deletedBook['renert_id']) + " </a>")
+                        renIdTD.html("<a href='/book/" + String(deletedBook['renert_id']) + "' class='text-decoration-none text-info id'> " + String(deletedBook['renert_id']) + " </a>")
                         let titleTD = $("<td>").appendTo(row)
                         titleTD.html("<a href='/book/" + String(deletedBook['renert_id']) + "' class='text-decoration-none text-info'>" + String(deletedBook['title']) + "</a>")
                         let authorTD = $("<td>").appendTo(row)
@@ -282,6 +306,15 @@ $("a.undo-btn").click( function(e)
                         $('#bookList').DataTable().destroy();
                         $("#bookList tbody").prepend(row[0])
                         $('#bookList').DataTable().draw();
+                        if ($("#bookList").DataTable().data().any())
+                        {
+                            $('.bi-exclamation-triangle').addClass('d-none')
+                        }
+                        books = []
+                        $(".id").each(function() {
+                        books.push($(this).html().trim())
+                        })
+                        $(".books-apply").val(books).trigger('change')
                         
                         $(".deleted-alert").fadeOut(1)
                         $(".undone-alert").removeClass("d-none")

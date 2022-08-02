@@ -5,7 +5,7 @@ $(document).ready( function () {
 let tags = []
 
 $(".id").each(function() {
-    tags.push($(this).html())
+    tags.push($(this).html().trim())
 })
 
 $(document).ready(function() {
@@ -17,6 +17,14 @@ $("button.apply").click(function(e)
 {
     let d = $('.tags-apply').val();
     let id = $('.edit-book').data("edit-book-id");
+    if (d.length == 0)
+    {
+        $('.bi-exclamation-triangle').removeClass('d-none')
+    }
+    if (d.length != 0)
+    {
+        $('.bi-exclamation-triangle').addClass('d-none')
+    }
     $.ajax({
         type: "POST",
         url: "/applyTags",
@@ -32,7 +40,7 @@ $("button.apply").click(function(e)
                 let row = $("<tr>");
             
                 let idTD = $("<td>").appendTo(row)
-                idTD.html("<a href='/tag/" + d[i] + "' class='text-decoration-none text-info'>" + d[i] + "</a>")
+                idTD.html("<a href='/tag/" + d[i] + "' class='text-decoration-none text-info id'>" + d[i] + "</a>")
                 let nameTD = $("<td>").appendTo(row)
                 nameTD.html("<a href='/tag/" + d[i] + "' class='text-decoration-none text-info'>" + tagNamesDescs[i]['tag_name'] + "</a>")
                 let descTD = $("<td>").appendTo(row)
@@ -175,6 +183,20 @@ function del(e)
                     row[0].children[i].classList.add("bg-danger");
                 }
                 $(row[0]).fadeOut(5000);
+                setTimeout(function() {
+                    $('#tagList').DataTable().destroy();
+                    $(row[0]).remove()
+                    $('#tagList').DataTable().draw();
+                    if (! $("#tagList").DataTable().data().any())
+                    {
+                        $('.bi-exclamation-triangle').removeClass('d-none')
+                    }
+                    tags = []
+                    $(".id").each(function() {
+                    tags.push($(this).html().trim())
+                    })
+                    $(".tags-apply").val(tags).trigger('change')
+                }, 5000)
 
                 $(".undone-alert").fadeOut(1)
                 $(".deleted-alert").fadeIn(1)
@@ -209,7 +231,7 @@ $("a.undo-btn").click( function(e)
                         let row = $("<tr>");
         
                         let idTD = $("<td>").appendTo(row)
-                        idTD.html("<a href='/tag/" + deletedTag['tag_id'] + "' class='text-decoration-none text-info'>" + String(deletedTag['tag_id']) + "</a>")
+                        idTD.html("<a href='/tag/" + deletedTag['tag_id'] + "' class='text-decoration-none text-info id'>" + String(deletedTag['tag_id']) + "</a>")
                         let nameTD = $("<td>").appendTo(row)
                         nameTD.html("<a href='/tag/" + deletedTag['tag_id'] + "' class='text-decoration-none text-info'>" + String(deletedTag['tag_name']) + "</a>")
                         let descTD = $("<td>").appendTo(row)
@@ -232,6 +254,15 @@ $("a.undo-btn").click( function(e)
                         $('#tagList').DataTable().destroy();
                         $("#tagList tbody").prepend(row[0])
                         $('#tagList').DataTable().draw();
+                        if ($("#tagList").DataTable().data().any())
+                        {
+                            $('.bi-exclamation-triangle').addClass('d-none')
+                        }
+                        tags = []
+                        $(".id").each(function() {
+                        tags.push($(this).html().trim())
+                        })
+                        $(".tags-apply").val(tags).trigger('change')
                         
                         $(".deleted-alert").fadeOut(1)
                         $(".undone-alert").removeClass("d-none")

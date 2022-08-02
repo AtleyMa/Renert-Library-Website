@@ -1,7 +1,6 @@
 # Renert Library Website
 '''
 TODO:   - Select2 with ajax on browse books
-        - Fix warning icon for untagged/unused books/tags after deleting all tags/books
         - Optimize speed on bookstags and browse books
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
         - Look nice on mobile (dynamic)
