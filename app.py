@@ -1,7 +1,6 @@
 # Renert Library Website
 '''
 TODO:
-        - Optimize speed on bookstags and browse books
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
         - Look nice on mobile (dynamic)
         - Tooltips
@@ -82,18 +81,30 @@ def tag(id):
 
 @app.route("/book-tags", methods=["GET", "POST"])
 def bookTags():
-    bookTags = db.session.execute("select * from library_books")
-    bookTags = [dict(x) for x in bookTags]
+    bookTags200 = db.session.execute("select * from library_books limit 200")
+    bookTags200 = [dict(x) for x in bookTags200]
     count =db.session.execute("select count(*) from library_books")
     count = [dict(x) for x in count]
     count = count[0]["count(*)"]
+    books_without_tags = []
+    for i in bookTags200:
+        book = db.session.execute("select * from library_books_tags where book_id = '" + str(i['id']) + "'")
+        book = [dict(x) for x in book]
+        if book == []:
+            books_without_tags.append(i["id"])
+    return render_template("booksTag.html", bookTags=bookTags200, bwt=books_without_tags)
+
+@app.route("/loadRestOfBooksTags", methods=["GET", "POST"])
+def loadRestOfBooksTags():
+    bookTags = db.session.execute("select * from library_books")
+    bookTags = [dict(x) for x in bookTags]
     books_without_tags = []
     for i in bookTags:
         book = db.session.execute("select * from library_books_tags where book_id = '" + str(i['id']) + "'")
         book = [dict(x) for x in book]
         if book == []:
             books_without_tags.append(i["id"])
-    return render_template("booksTag.html", bookTags=bookTags, bwt=books_without_tags)
+    return jsonify(bookTags, books_without_tags)
 
 @app.route("/book/<string:id>", methods=["GET", "POST"])
 def book(id):
@@ -113,11 +124,17 @@ def author(a):
 
 @app.route("/browse", methods=["GET", "POST"])
 def browse():
-    books = db.session.execute("select * from library_books")
-    books = [dict(x) for x in books]
+    books200 = db.session.execute("select * from library_books limit 200")
+    books200 = [dict(x) for x in books200]
     tags = db.session.execute("select * from library_tags")
     tags = [dict(x) for x in tags]
-    return render_template("browse.html", books=books, tags=tags)
+    return render_template("browse.html", books=books200, tags=tags)
+
+@app.route("/loadRestOfBooksBrowse", methods=["GET", "POST"])
+def loadRestOfBooksBrowse():
+    books = db.session.execute("select * from library_books")
+    books = [dict(x) for x in books]
+    return jsonify(books)
 
 @app.route("/authors/<string:a>", methods=["GET", "POST"])
 def authorB(a):
