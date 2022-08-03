@@ -86,13 +86,15 @@ def bookTags():
     count =db.session.execute("select count(*) from library_books")
     count = [dict(x) for x in count]
     count = count[0]["count(*)"]
+    tags = db.session.execute("select * from library_tags")
+    tags = [dict(x) for x in tags]
     books_without_tags = []
     for i in bookTags200:
         book = db.session.execute("select * from library_books_tags where book_id = '" + str(i['id']) + "'")
         book = [dict(x) for x in book]
         if book == []:
             books_without_tags.append(i["id"])
-    return render_template("booksTag.html", bookTags=bookTags200, bwt=books_without_tags)
+    return render_template("booksTag.html", bookTags=bookTags200, bwt=books_without_tags, tags=tags)
 
 @app.route("/loadRestOfBooksTags", methods=["GET", "POST"])
 def loadRestOfBooksTags():

@@ -18,6 +18,11 @@ if (document.referrer.toString().includes("undoBookDelete"))
     }, 6000)
 }
 
+let ogTable = [];
+$(document).ready(function() {
+    $('.tags-search').select2();
+});
+
 $("td.edit-book").mouseenter(function (e)
 {
     $(e.currentTarget).children().attr("width", 25)
@@ -51,8 +56,8 @@ $(document).ready( function() {
                 if (all[1].includes(all[0][i]['id']))
                 {
                     tr = `<tr>
-                    <td style="background-color: #ffffcc">
-                        <a href="/book/` + all[0][i]['renert_id'] + `" class="text-decoration-none text-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for book details">` + all[0][i]['renert_id'] + `</a>
+                    <td style="background-color: #ffffcc" class="id">
+                        <a href="/book/` + all[0][i]['renert_id'] + `" class="text-decoration-none text-info id" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for book details">` + all[0][i]['renert_id'] + `</a>
                     </td>
                     <td style="background-color: #ffffcc">
                         <a href="/book/` + all[0][i]['renert_id'] + `" class="text-decoration-none text-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for book details">` + all[0][i]['title'] + `</a>
@@ -76,8 +81,8 @@ $(document).ready( function() {
                 else
                 {
                     tr = `<tr>
-                    <td>
-                        <a href="/book/` + all[0][i]['renert_id'] + `" class="text-decoration-none text-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for book details">` + all[0][i]['renert_id'] + `</a>
+                    <td class="id">
+                        <a href="/book/` + all[0][i]['renert_id'] + `" class="text-decoration-none text-info id" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for book details">` + all[0][i]['renert_id'] + `</a>
                     </td>
                     <td>
                         <a href="/book/` + all[0][i]['renert_id'] + `" class="text-decoration-none text-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for book details">` + all[0][i]['title'] + `</a>
@@ -126,6 +131,7 @@ $(document).ready( function() {
                 $(trashCell).click(del);
                 $(editCell).click(edit);
             })
+            ogTable = $("#bookList").DataTable().$("tr");
         },
         error: function(x)
         {
@@ -254,6 +260,15 @@ function edit(e)
                 $("[data-edit-ren-id=" + (id) + "]").replaceWith("<td class='apply-book' data-apply-ren-id='" + id + "'><svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='currentColor' class='bi bi-check2-all, text-success' viewBox='0 0 16 16'><path d='M12.354 4.354a.5.5 0 0 0-.708-.708L5 10.293 1.854 7.146a.5.5 0 1 0-.708.708l3.5 3.5a.5.5 0 0 0 .708 0l7-7zm-4.208 7-.896-.897.707-.707.543.543 6.646-6.647a.5.5 0 0 1 .708.708l-7 7a.5.5 0 0 1-.708 0z'/><path d='m5.354 7.146.896.897-.707.707-.897-.896a.5.5 0 1 1 .708-.708z'/></svg>")
                 row[0].children[1].outerHTML = "<td><input type='text' class='form-control' value='" + row[0].children[1].children[0].innerHTML.trim() + "'></td>"
                 row[0].children[2].outerHTML = "<td><input type='text' class='form-control' value='" + row[0].children[2].children[0].innerHTML.trim() + "'></td>"
+                $("td.apply-book").mouseenter(function (e)
+                        {
+                            $(e.currentTarget).children().attr("width", 25)
+                            $(e.currentTarget).children().attr("height", 25)
+                        }).mouseleave( function(e)
+                        {
+                            $(e.currentTarget).children().attr("width", 20)
+                            $(e.currentTarget).children().attr("height", 20)
+                        })
                 $("td.apply-book").click( function(e)
                 {
                 let curr = $(e.currentTarget);
@@ -336,6 +351,56 @@ $("a.undo-edit-btn").click(function(e)
         error: function(x)
         {
             console.log("Ajax failed to retrieve data from the server")
+        }
+    })
+}
+)
+
+$("button.show").click(function(e)
+{
+    $("#bookList").DataTable().destroy();
+    $("#bookList").DataTable().rows().remove()
+    for (let a = 0; a < ogTable.length; a++)
+    {
+        $("#bookList").DataTable().row.add($(ogTable[a]))
+    }
+    $("#bookList").DataTable().draw();
+    let d = $('.tags-search').val();
+    $.ajax({
+        type: "POST",
+        url: "/searchByTag",
+        data: {values: d},
+        success: function(x)
+        {
+            if (d != [])
+            {
+                filtered = x;
+                list = []
+                $("#bookList").DataTable().rows().every( function(i) {
+                    let string = $("#bookList").DataTable().row(i).data()[0]
+                    let final = $(string).filter(".id")[0]
+                    final = $(final).text()
+                    count = 0;
+                    if (filtered.some(e => e.renert_id == String(final).trim()))
+                    {
+                        count +=1
+                    }
+                    if (count == 0)
+                    {
+                        list.push(i)
+                    }
+                })
+                $("#bookList").DataTable().destroy();
+                for (let z = list.length-1; z > -1; z--)
+                {
+                    $("#bookList").DataTable().row(list[z]).remove();
+                }
+                $("#bookList").DataTable().draw();
+            }
+        },
+        error: function(x)
+        {
+            console.log("Ajax failed filter books")
         }
     })
 }
