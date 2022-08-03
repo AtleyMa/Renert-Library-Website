@@ -37,6 +37,11 @@ function del(e)
                     row[0].children[i].classList.add("bg-danger");
                 }
                 $(row[0]).fadeOut(5000);
+                setTimeout(function() {
+                    $('#tagList').DataTable().destroy();
+                    $(row[0]).remove()
+                    $('#tagList').DataTable().draw();
+                }, 5000)
 
                 $(".undone-alert").fadeOut(1)
                 $(".deleted-alert").fadeIn(1)

@@ -230,7 +230,6 @@ def bookDelete(id):
     sql3 = db.session.execute(sql3)
     sql3 = [dict(x) for x in sql3]
     deleted_book += sql3
-    pprint(deleted_book)
 
     sql2 = "select tag_id from library_books_tags where book_id = '" + str(id) + "'"
     sql2 = db.session.execute(sql2)
@@ -335,7 +334,6 @@ def delBook(id):
     sql3 = db.session.execute(sql3)
     sql3 = [dict(x) for x in sql3]
     deleted_book += sql3
-    pprint(deleted_book)
 
     sql2 = "select tag_id from library_books_tags where book_id = '" + str(id) + "'"
     sql2 = db.session.execute(sql2)
@@ -470,7 +468,6 @@ def applyBook(id):
     value2 = request.form["val2"]
 
     sql1 = "select title, author from library_books where renert_id = '" + str(id) + "'"
-    pprint(sql1)
     sql1 = db.session.execute(sql1)
     sql1 = [dict(x) for x in sql1]
 
@@ -603,7 +600,6 @@ def applyBooksS2():
     db.session.execute("delete from library_books_tags where tag_id ='" + str(id) + "'")
     db.session.commit()
     values = request.form.getlist("values[]")
-    pprint(values)
     book_t_a = []
     for i in values:
         db.session.execute("insert into library_books_tags (book_id, tag_id) values ('" + i + "','" + id + "')")

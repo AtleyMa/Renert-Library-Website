@@ -18,6 +18,26 @@ if (document.referrer.toString().includes("undoBookDelete"))
     }, 6000)
 }
 
+$("td.edit-book").mouseenter(function (e)
+{
+    $(e.currentTarget).children().attr("width", 25)
+    $(e.currentTarget).children().attr("height", 25)
+}).mouseleave( function(e)
+{
+    $(e.currentTarget).children().attr("width", 20)
+    $(e.currentTarget).children().attr("height", 20)
+})
+
+$("td.trash-book").mouseenter(function (e)
+{
+    $(e.currentTarget).children().attr("width", 25)
+    $(e.currentTarget).children().attr("height", 25)
+}).mouseleave( function(e)
+{
+    $(e.currentTarget).children().attr("width", 20)
+    $(e.currentTarget).children().attr("height", 20)
+})
+
 $(document).ready( function() {
     $.ajax({
         url: "/loadRestOfBooksTags",
@@ -81,6 +101,31 @@ $(document).ready( function() {
                 $("#bookList").DataTable().row.add($(tr))
             }
             $("#bookList").DataTable().draw()
+            $("#bookList").DataTable().rows().every( function(i)
+            {
+                let trashCell = $("#bookList").DataTable().cell(i, 3).node()
+                let editCell = $("#bookList").DataTable().cell(i, 4).node()
+                $(trashCell).mouseenter(function (e)
+                {
+                    $(this).children().attr("width", 25)
+                    $(this).children().attr("height", 25)
+                }).mouseleave( function(e)
+                {
+                    $(this).children().attr("width", 20)
+                    $(this).children().attr("height", 20)
+                })
+                $(editCell).mouseenter(function (e)
+                {
+                    $(this).children().attr("width", 25)
+                    $(this).children().attr("height", 25)
+                }).mouseleave( function(e)
+                {
+                    $(this).children().attr("width", 20)
+                    $(this).children().attr("height", 20)
+                })
+                $(trashCell).click(del);
+                $(editCell).click(edit);
+            })
         },
         error: function(x)
         {
@@ -104,12 +149,17 @@ function del(e)
                     row[0].children[i].classList.add("bg-danger");
                 }
                 $(row[0]).fadeOut(5000);
+                setTimeout(function() {
+                    $('#bookList').DataTable().destroy();
+                    $(row[0]).remove()
+                    $('#bookList').DataTable().draw();
+                }, 5000)
 
                 $(".deleted-alert").fadeIn(1)
-                $(".deleted-alert")[0].classList.remove("d-none");
+                $(".deleted-alert").removeClass("d-none");
                 setTimeout( ()=>{
                 $(".deleted-alert").fadeOut( ()=>{
-                $(".deleted-alert")[0].classList.add("d-none")
+                $(".deleted-alert").addClass("d-none")
                 });
                 }, 3000)
             },
@@ -129,7 +179,6 @@ $("a.undo-btn").click( function(e)
         success: function(x)
         {
             deletedBook = x
-            console.log(deletedBook)
             $.ajax({
                 url: "/undoBookDel",
                 success: function(x)
@@ -171,6 +220,7 @@ $("a.undo-btn").click( function(e)
                             $(e.currentTarget).children().attr("height", 20)
                         })
                         
+                        $("[data-ren-id=" + deletedBook['renert_id'] + "]").fadeOut(1);
                         $('#bookList').DataTable().destroy();
                         $("#bookList tbody").prepend(row[0])
                         $('#bookList').DataTable().draw();
@@ -192,17 +242,6 @@ $("a.undo-btn").click( function(e)
     })
 }
 );
-
-$("td.trash-book").mouseenter(function (e)
-{
-    $(e.currentTarget).children().attr("width", 25)
-    $(e.currentTarget).children().attr("height", 25)
-}).mouseleave( function(e)
-{
-    $(e.currentTarget).children().attr("width", 20)
-    $(e.currentTarget).children().attr("height", 20)
-})
-
 
 function edit(e)
 {
@@ -245,10 +284,10 @@ function edit(e)
                         
                         $(".undone-apply-alert").fadeOut(1)
                         $(".applied-alert").fadeIn(1)
-                        $(".applied-alert")[0].classList.remove("d-none");
+                        $(".applied-alert").removeClass("d-none");
                         setTimeout( ()=>{
                         $(".applied-alert").fadeOut( ()=>{
-                        $(".applied-alert")[0].classList.add("d-none")
+                        $(".applied-alert").addClass("d-none")
                         });
                         }, 5000)
                     },
@@ -301,13 +340,3 @@ $("a.undo-edit-btn").click(function(e)
     })
 }
 )
-
-$("td.edit-book").mouseenter(function (e)
-{
-    $(e.currentTarget).children().attr("width", 25)
-    $(e.currentTarget).children().attr("height", 25)
-}).mouseleave( function(e)
-{
-    $(e.currentTarget).children().attr("width", 20)
-    $(e.currentTarget).children().attr("height", 20)
-})
