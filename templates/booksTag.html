@@ -39,13 +39,25 @@ Book Tags
 <h5 class="m-3"> <span style="background-color: #ffffcc">Books that are highlighted are un-tagged</span></h5>
 <br>
 <div class="row">
-    <div class="col-2"><h5 class="ms-3">Filter by Tag:</h5></div>
-        <select class="tags-search col-9" name="tags-search" multiple="multiple">
-            {% for x in tags %}
-                <option value="{{x.tag_id}}">{{x.tag_name}}</option>
-            {% endfor %}
+    <div class="col-2"><h5 class="ms-3">Filter by tag:</h5></div>
+    <select class="tags-search col-9" multiple="multiple">
+        {% for x in tags %}
+            <option value="{{x.tag_id}}">{{x.tag_name}}</option>
+        {% endfor %}
+    </select>
+    <div class="col-1"><button type="submit" onclick="return false;" class="btn btn-dark show">Show</button></div>
+</div>
+<br>
+<div class="row">
+    <div class="col-3"><h5 class="ms-3">Filter by tagged/un-tagged books:</h5></div>
+    <div class="col-3">
+        <select class="tagged-search form-select">
+        <option value="0" selected>All Books</option>
+        <option value="1">Tagged Books</option>
+        <option value="2">Un-tagged Books</option>
         </select>
-        <div class="col-1"><button type="submit" onclick="return false;" class="btn btn-dark show">Show</button></div>
+    </div>
+    <div class="col-1"><button type="submit" onclick="return false;" class="btn btn-dark show-tagged">Show</button></div>
 </div>
 <br>
 <table class="table table-hover table-light table-bordered display" id="bookList">

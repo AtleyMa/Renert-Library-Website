@@ -4,7 +4,6 @@ TODO:
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
         - Look nice on mobile (dynamic)
         - Tooltips for browse and book tags
-        - Sort by unused books/tags and others
 '''
 
 from __future__ import division

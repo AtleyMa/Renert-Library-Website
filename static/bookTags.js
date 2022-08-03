@@ -364,7 +364,6 @@ $("button.show").click(function(e)
     {
         $("#bookList").DataTable().row.add($(ogTable[a]))
     }
-    $("#bookList").DataTable().draw();
     let d = $('.tags-search').val();
     $.ajax({
         type: "POST",
@@ -390,18 +389,49 @@ $("button.show").click(function(e)
                         list.push(i)
                     }
                 })
-                $("#bookList").DataTable().destroy();
                 for (let z = list.length-1; z > -1; z--)
                 {
                     $("#bookList").DataTable().row(list[z]).remove();
                 }
                 $("#bookList").DataTable().draw();
             }
+            $("#bookList").DataTable().draw();
         },
         error: function(x)
         {
             console.log("Ajax failed filter books")
         }
     })
-}
-)
+})
+
+$("button.show-tagged").click(function(e)
+{
+    $("#bookList").DataTable().destroy();
+    $("#bookList").DataTable().rows().remove()
+    for (let a = 0; a < ogTable.length; a++)
+    {
+        $("#bookList").DataTable().row.add($(ogTable[a]))
+    }
+    let d = $('.tagged-search').find(":selected").text();
+    if (d != 'All Books')
+    {
+        list = []
+        $("#bookList").DataTable().rows().every( function(i) {
+            let final = $("#bookList").DataTable().cell(i, 0).node()
+            if ($(final).css("background-color")=="rgb(255, 255, 204)" && d == 'Tagged Books')
+            {
+                list.push(i)
+            }
+            else if ($(final).css("background-color")!="rgb(255, 255, 204)" && d == 'Un-tagged Books')
+            {
+                list.push(i)
+            }
+        })
+        for (let z = list.length-1; z > -1; z--)
+        {
+            $("#bookList").DataTable().row(list[z]).remove();
+        }
+        $("#bookList").DataTable().draw();
+    }
+    $("#bookList").DataTable().draw();
+})

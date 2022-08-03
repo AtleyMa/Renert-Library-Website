@@ -259,3 +259,37 @@ $("td.edit-tag").mouseenter(function (e)
     $(e.currentTarget).children().attr("width", 20)
     $(e.currentTarget).children().attr("height", 20)
 })
+
+let ogTable = $("#tagList").DataTable().$("tr");
+
+$("button.show-used").click(function(e)
+{
+    $("#tagList").DataTable().destroy();
+    $("#tagList").DataTable().rows().remove()
+    for (let a = 0; a < ogTable.length; a++)
+    {
+        $("#tagList").DataTable().row.add($(ogTable[a]))
+    }
+    let d = $('.used-search').find(":selected").text();
+    if (d != 'All Tags')
+    {
+        list = []
+        $("#tagList").DataTable().rows().every( function(i) {
+            let final = $("#tagList").DataTable().cell(i, 0).node()
+            if ($(final).css("background-color")=="rgb(255, 255, 204)" && d == 'Used Tags')
+            {
+                list.push(i)
+            }
+            else if ($(final).css("background-color")!="rgb(255, 255, 204)" && d == 'Un-used Tags')
+            {
+                list.push(i)
+            }
+        })
+        for (let z = list.length-1; z > -1; z--)
+        {
+            $("#tagList").DataTable().row(list[z]).remove();
+        }
+        $("#tagList").DataTable().draw();
+    }
+    $("#tagList").DataTable().draw();
+})
