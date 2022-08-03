@@ -343,3 +343,13 @@ $("td.trash-book").mouseenter(function (e)
     $(e.currentTarget).children().attr("width", 20)
     $(e.currentTarget).children().attr("height", 20)
 })
+
+$("td.edit-tag").mouseenter(function (e)
+{
+    $(e.currentTarget).children().attr("width", 25)
+    $(e.currentTarget).children().attr("height", 25)
+}).mouseleave( function(e)
+{
+    $(e.currentTarget).children().attr("width", 20)
+    $(e.currentTarget).children().attr("height", 20)
+})

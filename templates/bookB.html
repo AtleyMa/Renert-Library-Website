@@ -9,7 +9,7 @@
 <a href="/browse" class="btn btn-dark m-3">Back to all books</a>
 
 <h1 class="ms-3">{{book[0]["title"]}}</h1>
-<a href="/authors/{{book[0]['author']}}" class="text-decoration-none text-info"><h2 class="ms-3">{{book[0]["author"]}}</h2></a>
+<a href="/authors/{{book[0]['author']}}" class="text-decoration-none text-info d-inline-flex" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for all books by {{book[0]['author']}}"><h2 class="ms-3">{{book[0]["author"]}}</h2></a>
 <br>
 
 <table class="table table-hover table-light table-bordered display mx-3">

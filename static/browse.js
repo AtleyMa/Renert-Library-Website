@@ -18,13 +18,13 @@ $(document).ready( function() {
             {
                 tr = `<tr>
                 <td class="id">
-                    <a href="/book/` + all[i]['renert_id'] + `" class="text-decoration-none text-info id">` + all[i]['renert_id'] + `</a>
+                    <a href="/books/` + all[i]['renert_id'] + `" class="text-decoration-none text-info id" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for book details">` + all[i]['renert_id'] + `</a>
                 </td>
                 <td>
-                    <a href="/book/` + all[i]['renert_id'] + `" class="text-decoration-none text-info">` + all[i]['title'] + `</a>
+                    <a href="/books/` + all[i]['renert_id'] + `" class="text-decoration-none text-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for book details">` + all[i]['title'] + `</a>
                 </td>
                 <td>
-                    <a href="/author/` + all[i]['author'] + `" class="text-decoration-none text-info"> ` + all[i]['author'] + ` </a>
+                    <a href="/authors/` + all[i]['author'] + `" class="text-decoration-none text-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for all books by` + all[i]['author'] + `"> ` + all[i]['author'] + ` </a>
                 </td>
                 </tr>`
                 $("#bookList").DataTable().row.add($(tr))

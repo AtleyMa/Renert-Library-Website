@@ -3,7 +3,7 @@
 TODO:
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
         - Look nice on mobile (dynamic)
-        - Tooltips
+        - Tooltips for browse and book tags
         - Sort by unused books/tags and others
 '''
 
@@ -144,17 +144,11 @@ def authorB(a):
 
 @app.route("/books/<string:id>", methods=["GET", "POST"])
 def bookB(id):
-    book = db.session.execute("select title, author, notes, created_at, updated_at from library_books where renert_id = '" + str(id) + "'")
+    book = db.session.execute("select title, author, created_at, updated_at from library_books where renert_id = '" + str(id) + "'")
     book = [dict(x) for x in book]
     tags = db.session.execute("select library_tags.tag_id, library_tags.tag_name, library_tags.description from library_tags inner join library_books_tags on library_tags.tag_id = library_books_tags.tag_id inner join library_books on library_books_tags.book_id = library_books.id where library_books.renert_id = '" + str(id) + "'")
     tags = [dict(x) for x in tags]
     return render_template("bookB.html", book=book, tags=tags, id=id)
-
-@app.route("/created-by/<int:id>", methods=["GET", "POST"])
-def createdBy(id):
-    created = db.session.execute("select tag_name, description from library_tags where created_by = '" + str(id) + "'")
-    created = [dict(x) for x in created]
-    return render_template("createdBy.html", created=created, id=id)
 
 deleted_tag_all = [[]]
 deleted_book_tags_all = [[]]
@@ -256,7 +250,7 @@ def bookDelete(id):
 def undoBookDelete():
     global deleted_book
     global deleted_tags
-    sql = "insert into library_books (author, created_at, updated_at, id, notes, renert_id, title) values ('" + str(deleted_book[0]['author']) + "','" + str(deleted_book[0]['created_at']) + "','" + str(deleted_book[0]['updated_at']) + "','" + str(deleted_book[0]['id']) + "','" + str(deleted_book[0]['notes']) + "','" + str(deleted_book[0]['renert_id']) + "','" + str(deleted_book[0]['title']) + "')"
+    sql = "insert into library_books (author, created_at, updated_at, id, renert_id, title) values ('" + str(deleted_book[0]['author']) + "','" + str(deleted_book[0]['created_at']) + "','" + str(deleted_book[0]['updated_at']) + "','" + str(deleted_book[0]['id']) + "','" + str(deleted_book[0]['notes']) + "','" + str(deleted_book[0]['renert_id']) + "','" + str(deleted_book[0]['title']) + "')"
     db.session.execute(sql)
     for i in deleted_tags:
         sql1 = "insert into library_books_tags (book_id, tag_id) values ('" + str(deleted_book[0]['renert_id']) + "','" + str(i['tag_id']) + "')"
