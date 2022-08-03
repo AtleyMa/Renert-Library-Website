@@ -1,17 +1,20 @@
+// Initialize DataTable
 $(document).ready( function () {
     $('#tagList').DataTable();
 } );
 
+// If the user just deleted a tag show the respective alert
 if (document.referrer.toString().includes("tagDelete"))
 {
     document.getElementsByClassName("deleted-alert")[0].classList.remove("d-none");
     setTimeout( ()=>{
         $(".deleted-alert").fadeOut( ()=>{
-            document.getElementsByClassName("deleted-alert")[0].classList.add("d-none")
+            document.getElementsByClassName("deleted-alert")[0].classList.add("d-none");
         });
-    }, 3000)
+    }, 3000);
 }
 
+// If the user just undid the deletion of a tag then show the respective alert
 if (document.referrer.toString().includes("undoTagDelete"))
 {
     document.getElementsByClassName("undone-alert")[0].classList.remove("d-none");
@@ -21,6 +24,8 @@ if (document.referrer.toString().includes("undoTagDelete"))
         });
     }, 3000)
 }
+
+// Ajax function to delete the selected tag
 function del(e)
 {
 
@@ -58,9 +63,9 @@ function del(e)
             }})
 }
 
-
 $("td.trash-tag").click(del);
 
+// Ajax function to undo the deletion of the tag
 $("a.undo-btn").click( function(e)
 {
     let curr = $(e.currentTarget);
@@ -133,6 +138,7 @@ $("a.undo-btn").click( function(e)
 }
 );
 
+// If the user hovers over the trash icon, it enlarges
 $("td.trash-tag").mouseenter(function (e)
 {
     $(e.currentTarget).children().attr("width", 25)
@@ -143,6 +149,7 @@ $("td.trash-tag").mouseenter(function (e)
     $(e.currentTarget).children().attr("height", 20)
 })
 
+// Ajax function to edit the selected tag
 function edit(e)
 {
     let curr = $(e.currentTarget);
@@ -215,6 +222,7 @@ function edit(e)
 
 $("td.edit-tag").click(edit);
 
+// Ajax function to undo the edits of the selected tag
 $("a.undo-edit-btn").click(function(e)
 {
     let editedTag;
@@ -250,6 +258,7 @@ $("a.undo-edit-btn").click(function(e)
 }
 )
 
+// If the user hovers over the edit icon, it enlarges
 $("td.edit-tag").mouseenter(function (e)
 {
     $(e.currentTarget).children().attr("width", 25)
@@ -260,8 +269,9 @@ $("td.edit-tag").mouseenter(function (e)
     $(e.currentTarget).children().attr("height", 20)
 })
 
-let ogTable = $("#tagList").DataTable().$("tr");
+let ogTable = $("#tagList").DataTable().$("tr"); // List of all tags
 
+// Ajax function to filter the list of books by whether they are used/un-used
 $("button.show-used").click(function(e)
 {
     $("#tagList").DataTable().destroy();

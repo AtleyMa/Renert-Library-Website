@@ -4,20 +4,20 @@ TODO:
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
         - Look nice on mobile (dynamic)
         - Tooltips for browse and book tags
+        - History of deleted books and delted tags
+        - Make add book form
+        - Make add tag form into ajax
 '''
 
 from __future__ import division
-from operator import floordiv
-from flask import Flask, jsonify, redirect, render_template, request, session
+from flask import Flask, jsonify, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 from pprint import pprint
 from flask_wtf import FlaskForm
-from sqlalchemy import null, text, insert
-from sqlalchemy.types import NVARCHAR
-from wtforms import IntegerField, StringField, SubmitField,TextAreaField, SelectMultipleField
-from wtforms.validators import DataRequired, Optional
+from wtforms import StringField, SubmitField,TextAreaField
+from wtforms.validators import DataRequired
 from flask_bootstrap import Bootstrap
-from flask_debugtoolbar import DebugToolbarExtension, panels
+from flask_debugtoolbar import DebugToolbarExtension
 
 app = Flask(__name__)
 
@@ -32,20 +32,24 @@ toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
 b = Bootstrap(app)
 
+# Function to add a new tag to the database based on user input
 def add_tags(tag_name, tag_def):
     sql = "insert into library_tags (tag_name, description, created_by) values ('" + str(tag_name) + "','" + str(tag_def) + "', 22)"
     db.session.execute(sql)
     db.session.commit()
 
+# Form to add a new tag to the database (done in add_tags())
 class add_tag_form(FlaskForm):
     tag_name = StringField('Tag Name: ', validators=[DataRequired()])
     tag_def = TextAreaField('Tag Description: ', validators=[DataRequired()])
     add = SubmitField("Add", validators=[DataRequired()])
 
+# Main page showing Renert school logo and Navbar
 @app.route("/", methods=["GET", "POST"])
 def main():
     return render_template("main.html")
 
+# Display all tags from database, form to filter based on used/un-used tags, and a form to add new tag to the database (For Librarian)
 @app.route("/tags", methods=["GET", "POST"])
 def tags():
     add_tag = add_tag_form()
@@ -68,6 +72,7 @@ def tags():
             tags_without_books.append(i["tag_id"])
     return render_template("tags.html", tags=tags, add_form=add_tag, count=count, twb = tags_without_books)
 
+# Display individual tag details with ability to edit and delete the tag. Additonally shows all the books with the current tag applied. (For librarian)
 @app.route("/tag/<int:id>", methods=["GET", "POST"])
 def tag(id):
     tag = db.session.execute("select tag_name, description, created_by, created_at, updated_at from library_tags where tag_id = '" + str(id) + "'")
@@ -78,6 +83,7 @@ def tag(id):
     all_books = [dict(x) for x in all_books]
     return render_template("tag.html", tag=tag, id=id, books=books, all_books = all_books)
 
+# Display first 200 books along with two forms to filter by tags or tagged/un-tagged books. (For Librarian)
 @app.route("/book-tags", methods=["GET", "POST"])
 def bookTags():
     bookTags200 = db.session.execute("select * from library_books limit 200")
@@ -95,6 +101,7 @@ def bookTags():
             books_without_tags.append(i["id"])
     return render_template("booksTag.html", bookTags=bookTags200, bwt=books_without_tags, tags=tags)
 
+# Loads the rest of the books in booktags() for optimization
 @app.route("/loadRestOfBooksTags", methods=["GET", "POST"])
 def loadRestOfBooksTags():
     bookTags = db.session.execute("select * from library_books")
@@ -107,6 +114,7 @@ def loadRestOfBooksTags():
             books_without_tags.append(i["id"])
     return jsonify(bookTags, books_without_tags)
 
+# Display individual book details with the ability to edit and delete the book. Additionally shows all tags that are applied to the current book. (For Librarian)
 @app.route("/book/<string:id>", methods=["GET", "POST"])
 def book(id):
     book = db.session.execute("select id, title, author, created_at, updated_at from library_books where renert_id = '" + str(id) + "'")
@@ -117,12 +125,14 @@ def book(id):
     all_tags = [dict(x) for x in all_tags]
     return render_template("book.html", book=book, tags=tags, id=id, all_tags = all_tags)
 
+# Display all books by the specific author (For Librarian)
 @app.route("/author/<string:a>", methods=["GET", "POST"])
 def author(a):
     author = db.session.execute("select * from library_books where author = '" + str(a) + "'")
     author = [dict(x) for x in author]
     return render_template("author.html", author=author, a=a)
 
+# Display first 200 books to browse. No ability to change the database. (For Students and Teachers)
 @app.route("/browse", methods=["GET", "POST"])
 def browse():
     books200 = db.session.execute("select * from library_books limit 200")
@@ -131,18 +141,21 @@ def browse():
     tags = [dict(x) for x in tags]
     return render_template("browse.html", books=books200, tags=tags)
 
+# Loads the rest of the books in Browse for optimization
 @app.route("/loadRestOfBooksBrowse", methods=["GET", "POST"])
 def loadRestOfBooksBrowse():
     books = db.session.execute("select * from library_books")
     books = [dict(x) for x in books]
     return jsonify(books)
 
+# Display all books by specific author (For Students and Teachers)
 @app.route("/authors/<string:a>", methods=["GET", "POST"])
 def authorB(a):
     authors = db.session.execute("select * from library_books where author = '" + str(a) + "'")
     authors = [dict(x) for x in authors]
     return render_template("authorB.html", authors=authors, a=a)
 
+# Display individual book details and all tags that are applied to it. 
 @app.route("/books/<string:id>", methods=["GET", "POST"])
 def bookB(id):
     book = db.session.execute("select title, author, created_at, updated_at from library_books where renert_id = '" + str(id) + "'")
@@ -158,6 +171,7 @@ deleted_tags_all = [[]]
 
 deleted_tag = []
 deleted_book_tags = []
+# Delete tag from Tag page (Delete Tag button)
 @app.route("/tagDelete/<int:id>", methods=["GET", "POST"])
 def tagDelete(id):
     sql3 = "select * from library_tags where tag_id = '" + str(id) + "'"
@@ -190,7 +204,7 @@ def tagDelete(id):
 </head>
 </html>"""
 
-
+# Undo the deletion of a tag from (deleteTag())
 @app.route("/undoTagDelete", methods=["GET", "POST"])
 def undoTagDelete():
     global deleted_tag
@@ -214,6 +228,7 @@ deleted_book = []
 deleted_books_all = [[]]
 deleted_tags = []
 deleted_tags_to_books_all = [[]]
+# Delete book from Book page. (Delete Book button)
 @app.route("/bookDelete/<string:id>", methods=["GET", "POST"])
 def bookDelete(id):
     global deleted_book
@@ -246,7 +261,7 @@ def bookDelete(id):
 </head>
 </html>"""
 
-
+# Undo deletion of book from (bookDelete())
 @app.route("/undoBookDelete", methods=["GET", "POST"])
 def undoBookDelete():
     global deleted_book
@@ -266,7 +281,7 @@ def undoBookDelete():
 </head>
 </html>"""
 
-# Delete tag with ajax
+# Delete tag with ajax from tags
 @app.route("/delTag/<int:id>", methods=["GET", "POST"])
 def delTag(id):
     global deleted_tag
@@ -296,7 +311,7 @@ def delTag(id):
     db.session.commit()
     return "yay"
 
-# Undo tag deletion with ajax
+# Undo tag deletion with ajax from tags
 @app.route("/undoTagDel", methods=["GET", "POST"])
 def undoTagDel():
     global deleted_tag
@@ -311,13 +326,13 @@ def undoTagDel():
     deleted_book_tags.clear()
     return "yay"
 
-# Send the most recently deleted tag with ajax
+# Send the most recently deleted tag with ajax to tags
 @app.route("/getTags")
 def getTags():
     global deleted_tag
     return deleted_tag[0]
 
-# Delete book with ajax
+# Delete book with ajax from Book Tags
 @app.route("/delBook/<int:id>", methods=["GET", "POST"])
 def delBook(id):
     global deleted_book
@@ -346,7 +361,7 @@ def delBook(id):
     
     return "book deleted"
 
-# Undo book deletion with ajax
+# Undo book deletion with ajax from Book Tags
 @app.route("/undoBookDel", methods=["GET", "POST"])
 def undoBookDel():
     global deleted_book
@@ -361,7 +376,7 @@ def undoBookDel():
     deleted_tags.clear()
     return "undone book delete"
 
-# Send the most recently deleted tag with ajax
+# Send the most recently deleted tag with ajax to Book Tags
 @app.route("/getBook")
 def getBook():
     global deleted_book
@@ -370,7 +385,7 @@ def getBook():
 edited_tag = []
 edited_tags = [[]]
 
-# Apply edits to a tag with ajax
+# Apply edits to a tag with ajax in tags
 @app.route("/applyTag/<int:id>", methods=["GET", "POST"])
 def applyTag(id):
     global edited_tag
@@ -392,7 +407,7 @@ def applyTag(id):
     db.session.commit()
     return "applied"
 
-# Undo tag edits with ajax
+# Undo tag edits with ajax in tags
 @app.route("/undoTagEdit", methods=["GET", "POST"])
 def undoTagEdit():
     global edited_tag
@@ -402,13 +417,13 @@ def undoTagEdit():
     edited_tag.clear()
     return "undone"
 
-# Send the data from the most recently edited tag with ajax
+# Send the data from the most recently edited tag with ajax to tags
 @app.route("/getEditedTag")
 def getEditedTag():
     global edited_tag
     return jsonify(edited_tag)
 
-# Apply edits to tag name with ajax
+# Apply edits to tag name with ajax in tag
 @app.route("/applyTagName/<int:id>", methods=["GET", "POST"])
 def applyTagName(id):
     global edited_tag
@@ -429,7 +444,7 @@ def applyTagName(id):
     db.session.commit()
     return "applied"
 
-# Apply edits to tag name with ajax
+# Apply edits to tag name with ajax in tag
 @app.route("/applyTagDesc/<int:id>", methods=["GET", "POST"])
 def applyTagDesc(id):
     global edited_tag
@@ -453,7 +468,7 @@ def applyTagDesc(id):
 edited_book = []
 edited_books = [[]]
 
-# Edit book with ajax
+# Edit book with ajax in Book
 @app.route("/applyBook/<string:id>", methods=["GET", "POST"])
 def applyBook(id):
     global edited_book
@@ -465,9 +480,10 @@ def applyBook(id):
     sql1 = "select title, author from library_books where renert_id = '" + str(id) + "'"
     sql1 = db.session.execute(sql1)
     sql1 = [dict(x) for x in sql1]
+    pprint(sql1)
 
-    edited_book.append(sql1[0]["title"])
-    edited_book.append(sql1[0]["author"])
+    edited_book.append(sql1[0]['title'])
+    edited_book.append(sql1[0]['author'])
     edited_book.append(id)
     edited_books.append(edited_book)
     sql = "update library_books set title = '" + str(value1) + "' , author = '" + str(value2) + "' where renert_id = '" + str(id) + "'"
@@ -475,10 +491,11 @@ def applyBook(id):
     db.session.commit()
     return "applied"
 
-# Undo book edits with ajax
+# Undo book edits with ajax in Book
 @app.route("/undoBookEdit", methods=["GET", "POST"])
 def undoBookEdit():
     global edited_book
+    pprint(edited_book)
     sql = "update library_books set title = '" + str(edited_book[0]) + "' , author = '" + str(edited_book[1]) + "' where renert_id = '" + str(edited_book[2]) + "'"
     db.session.execute(sql)
     db.session.commit()

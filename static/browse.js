@@ -1,19 +1,22 @@
+// Initialize DataTable
 $(document).ready( function () {
     $('#bookList').DataTable();
 } );
-let ogTable = [];
+let ogTable = []; // List of all books in the database
+// Initialize Select2 Form
 $(document).ready(function() {
     $('.tags-search').select2();
 });
 
+// Load the rest of the books for optimization
 $(document).ready( function() {
     $.ajax({
         url: "/loadRestOfBooksBrowse",
         success: function(x)
         {
-            all = x
-            $("#bookList").DataTable().destroy()
-            $("#bookList").DataTable().rows().remove()
+            all = x;
+            $("#bookList").DataTable().destroy();
+            $("#bookList").DataTable().rows().remove();
             for (let i = 0; i < all.length; i++)
             {
                 tr = `<tr>
@@ -26,26 +29,27 @@ $(document).ready( function() {
                 <td>
                     <a href="/authors/` + all[i]['author'] + `" class="text-decoration-none text-info" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Click for all books by` + all[i]['author'] + `"> ` + all[i]['author'] + ` </a>
                 </td>
-                </tr>`
-                $("#bookList").DataTable().row.add($(tr))
+                </tr>`;
+                $("#bookList").DataTable().row.add($(tr));
             }
-            $("#bookList").DataTable().draw()
+            $("#bookList").DataTable().draw();
             ogTable = $("#bookList").DataTable().$("tr");
         },
         error: function(x)
         {
-            console.log("Ajax failed to load the rest of the books")
+            console.log("Ajax failed to load the rest of the books");
         }
     })
 })
 
+// Ajax function to filter the list of books by tag. If a book includes one of the tags in the form then it is displayed
 $("button.show").click(function(e)
 {
     $("#bookList").DataTable().destroy();
-    $("#bookList").DataTable().rows().remove()
+    $("#bookList").DataTable().rows().remove();
     for (let a = 0; a < ogTable.length; a++)
     {
-        $("#bookList").DataTable().row.add($(ogTable[a]))
+        $("#bookList").DataTable().row.add($(ogTable[a]));
     }
     $("#bookList").DataTable().draw();
     let d = $('.tags-search').val();
@@ -58,19 +62,19 @@ $("button.show").click(function(e)
             if (d != [])
             {
                 filtered = x;
-                list = []
+                list = [];
                 $("#bookList").DataTable().rows().every( function(i) {
-                    let string = $("#bookList").DataTable().row(i).data()[0]
-                    let final = $(string).filter(".id")[0]
-                    final = $(final).text()
+                    let string = $("#bookList").DataTable().row(i).data()[0];
+                    let final = $(string).filter(".id")[0];
+                    final = $(final).text();
                     count = 0;
                     if (filtered.some(e => e.renert_id == String(final).trim()))
                     {
-                        count +=1
+                        count +=1;
                     }
                     if (count == 0)
                     {
-                        list.push(i)
+                        list.push(i);
                     }
                 })
                 $("#bookList").DataTable().destroy();
@@ -83,7 +87,7 @@ $("button.show").click(function(e)
         },
         error: function(x)
         {
-            console.log("Ajax failed filter books")
+            console.log("Ajax failed filter books");
         }
     })
 }
