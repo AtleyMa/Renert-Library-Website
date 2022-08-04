@@ -4,9 +4,7 @@ TODO:
         - Add functionality to check whether student/teacher or librarian (Show website accordingly)
         - Look nice on mobile (dynamic)
         - Tooltips for browse and book tags
-        - History of deleted books and delted tags
-        - Make add book form
-        - Make add tag form into ajax
+        - History of deleted books and deleted tags
 '''
 
 from __future__ import division
@@ -32,18 +30,6 @@ toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
 b = Bootstrap(app)
 
-# Function to add a new tag to the database based on user input
-def add_tags(tag_name, tag_def):
-    sql = "insert into library_tags (tag_name, description, created_by) values ('" + str(tag_name) + "','" + str(tag_def) + "', 22)"
-    db.session.execute(sql)
-    db.session.commit()
-
-# Form to add a new tag to the database (done in add_tags())
-class add_tag_form(FlaskForm):
-    tag_name = StringField('Tag Name: ', validators=[DataRequired()])
-    tag_def = TextAreaField('Tag Description: ', validators=[DataRequired()])
-    add = SubmitField("Add", validators=[DataRequired()])
-
 # Main page showing Renert school logo and Navbar
 @app.route("/", methods=["GET", "POST"])
 def main():
@@ -52,13 +38,6 @@ def main():
 # Display all tags from database, form to filter based on used/un-used tags, and a form to add new tag to the database (For Librarian)
 @app.route("/tags", methods=["GET", "POST"])
 def tags():
-    add_tag = add_tag_form()
-
-    if add_tag.validate_on_submit():
-        add_tags(add_tag.tag_name.data, add_tag.tag_def.data)
-    else:
-        pprint("Adding Tag failed")
-    
     tags = db.session.execute("select * from library_tags")
     tags = [dict(x) for x in tags]
     count =db.session.execute("select count(*) from library_tags")
@@ -70,7 +49,7 @@ def tags():
         tag = [dict(x) for x in tag]
         if tag == []:
             tags_without_books.append(i["tag_id"])
-    return render_template("tags.html", tags=tags, add_form=add_tag, count=count, twb = tags_without_books)
+    return render_template("tags.html", tags=tags, count=count, twb = tags_without_books)
 
 # Display individual tag details with ability to edit and delete the tag. Additonally shows all the books with the current tag applied. (For librarian)
 @app.route("/tag/<int:id>", methods=["GET", "POST"])
@@ -634,3 +613,17 @@ def searchByTag():
     if (values == []):
         return jsonify(books)
     return jsonify(filtered)
+
+
+# Ajax function to add a new tag to the database based on user input
+@app.route("/addTag", methods=["GET", "POST"])
+def addTags():
+    tag_name = request.form["val1"]
+    tag_desc = request.form["val2"]
+    sql = "insert into library_tags (tag_name, description, created_by) values ('" + str(tag_name) + "','" + str(tag_desc) + "', 22)"
+    db.session.execute(sql)
+    id = db.session.execute("select tag_id from library_tags where tag_name = '" + str(tag_name) + "'")
+    id = [dict(x) for x in id]
+    id = id[0]['tag_id']
+    db.session.commit()
+    return jsonify(id)

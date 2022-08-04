@@ -34,15 +34,13 @@ Tags
     </div>
 </div>
 
-<div class="row">
-    <div class="col-lg-6">
-        <form class="form form-horizontal text-light m-3" method="POST" role="form" autocomplete="off">
-                <div class="input-group mb-2 border border-dark rounded p-2">
-                    {{ add_form.tag_name(class="form-control", placeholder="Tag Name") }}
-                    {{ add_form.tag_def(class="form-control", placeholder="Tag Description") }}
-                    {{ add_form.add(class="btn btn-dark")}}
-                </div>
-        </form>
+<div class="row m-3">
+    <div class="col-7">
+        <div class="input-group">
+            <input type="text" class="form-control p-3 tag-name-input" placeholder="Tag Name" required>
+            <textarea class="form-control tag-desc-input" style="max-height: 150px;" placeholder="Tag description" required></textarea>
+            <button type="submit" class="btn btn-dark add">Add</button>
+        </div>
     </div>
 </div>
 
