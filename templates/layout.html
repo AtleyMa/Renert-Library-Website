@@ -16,19 +16,22 @@
       <img id="loading-image" src="../static/loading.gif" alt="Loading..." />
     </div>
 
-    <nav class="navbar navbar-expand-lg bg-light">
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
       <div class="container-fluid">
         <a class="navbar-brand text-dark fs-1" href="/" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Home">Renert Library</a>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbarSpportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button> 
+        <div class="collapse navbar-collapse" id="navbar">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0 mavbar-nav-scroll" style="--bs-scroll-height: 100px;">
             <li class="nav-item">
-              <a class="nav-link text-dark fs-3 text-decoration-underline" href="/tags" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Click for all tags">Tags</a>
+              <a class="nav-link text-dark fs-3 text-decoration-underline d-inline-flex" href="/tags" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Click for all tags">Tags</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-dark fs-3 text-decoration-underline" href="/book-tags"data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Click for all books (Librarian)">Book Tags</a>
+              <a class="nav-link text-dark fs-3 text-decoration-underline d-inline-flex" href="/book-tags"data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Click for all books (Librarian)">Book Tags</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link text-dark fs-3 text-decoration-underline" href="/browse" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Click to browse all books (Student/Teacher)">Browse Books</a>
+              <a class="nav-link text-dark fs-3 text-decoration-underline d-inline-flex" href="/browse" data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-title="Click to browse all books (Student/Teacher)">Browse Books</a>
             </li>
           </ul>
         </div>

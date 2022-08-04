@@ -11,9 +11,6 @@ from __future__ import division
 from flask import Flask, jsonify, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 from pprint import pprint
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField,TextAreaField
-from wtforms.validators import DataRequired
 from flask_bootstrap import Bootstrap
 from flask_debugtoolbar import DebugToolbarExtension
 
